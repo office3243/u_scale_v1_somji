@@ -1,0 +1,13 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <div class="jumbotron container">
+        <a href="{% url "challans:raw_create" %}">
+            <button class="btn btn-primary">Raw Create Challan</button>
+        </a>
+
+    </div>
+{% endblock %}
+

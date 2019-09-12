@@ -1,0 +1,14 @@
+{% extends "portal/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Raw Create Challan{% endblock %}
+
+{% block content %}
+    <div class="jumbotron container">
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <input type="submit" class="btn btn-info" value="Create">
+        </form>
+    </div>
+{% endblock %}

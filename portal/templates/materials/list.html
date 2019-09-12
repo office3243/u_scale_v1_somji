@@ -1,0 +1,15 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Material List{% endblock %}
+
+{% block content %}
+    <div class="jumbotron container border-default">
+        <h3 class="text-center font-weight-bold text-black-50">All Materials</h3><hr>
+        {% if materials %}
+        {% else %}
+            <span class="alert alert-warning btn-block font-weight-bold">No ma
+            </span>
+        {% endif %}
+
+    </div>
+{% endblock %}

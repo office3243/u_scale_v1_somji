@@ -6,6 +6,8 @@ from django.db.models import Sum, Count, Max, Min
 from django.conf import settings
 from django.db.models.signals import post_save, pre_save, m2m_changed
 import decimal
+from rates.models import GroupRate, RateGroup, IndividualRate
+
 
 class Weight(models.Model):
 
@@ -29,14 +31,31 @@ class Weight(models.Model):
 
 def assign_total_weight_and_amount(sender, instance, *args, **kwargs):
     if instance.weight_counts != "":
+        print("weight count not ''")
         total_weight = sum(instance.get_weight_counts_list)
         if instance.total_weight != total_weight:
+            print("Total weight")
             instance.total_weight = total_weight
             instance.save()
-        amount = decimal.Decimal(instance.total_weight) * instance.rate_per_unit
+        individual_rates = instance.challan.party.individualrate_set.filter(is_active=True, material=instance.material)
+        if individual_rates.exists():
+            rate = individual_rates.first()
+        else:
+            group_rates = instance.challan.party.rate_group.grouprate_set.filter(is_active=True, material=instance.material)
+            if group_rates.exists():
+                rate = group_rates.first()
+            else:
+                rate = None
+        if rate is not None and instance.rate_per_unit != rate.amount:
+            print("Rate not None")
+            instance.rate_per_unit = rate.amount
+            instance.save()
+        amount = decimal.Decimal(instance.total_weight) * decimal.Decimal(instance.rate_per_unit)
         if instance.amount != amount:
+            print("Amount not matching")
             instance.amount = amount
             instance.save()
+    instance.challan.save()
 
 
 post_save.connect(assign_total_weight_and_amount, sender=Weight)
@@ -48,6 +67,10 @@ def challan_no_generator():
 
 class Challan(models.Model):
 
+    PAYMENT_GATEWAY_TYPE = (("CS", "Cash"), ("AC", "Account"), ("AL", "Account Less"))
+    payment_gateway_type = models.CharField(max_length=2, choices=PAYMENT_GATEWAY_TYPE)
+    is_payed = models.BooleanField()
+
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     challan_no = models.CharField(max_length=32, unique=True, default=challan_no_generator)
 
@@ -56,6 +79,7 @@ class Challan(models.Model):
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
     is_generated = models.BooleanField(default=False)
+    image = models.ImageField(upload_to="payments/", blank=True, null=True)
 
     extra_info = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -76,3 +100,14 @@ class Challan(models.Model):
     @property
     def get_update_url(self):
         return reverse_lazy("challans:update", kwargs={"challan_no": self.challan_no})
+
+
+def assign_weights_amount(sender, instance, *args, **kwargs):
+    if instance.weight_set.exists():
+        weights_amount = instance.calculate_weights_amount
+        if instance.weights_amount != weights_amount:
+            instance.weights_amount = weights_amount
+            instance.save()
+
+
+post_save.connect(assign_weights_amount, sender=Challan)

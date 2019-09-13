@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 
 class PartyCategory(models.Model):
@@ -34,3 +36,30 @@ class Party(models.Model):
     class Meta:
         verbose_name = "Party"
         verbose_name_plural = "Parties"
+
+
+class Wallet(models.Model):
+
+    party = models.ForeignKey(Party, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=9, decimal_places=2)
+
+    def __str__(self):
+        return "{} - {} Rs".format(self.party.get_display_text, self.balance)
+
+
+class WalletAdvance(models.Model):
+
+    # GATEWAY_CHOICES = (("CS", "Cash"), ("AC", "Account"))
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=9, decimal_places=2)
+    gateway_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    gateway_id = models.PositiveIntegerField()
+    gateway = GenericForeignKey("gateway_type", "gateway_id")
+
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    image = models.ImageField(upload_to="parties/wallets/advances/", blank=True, null=True)
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.wallet.party.get_display_text, self.amount, self.gateway_type)

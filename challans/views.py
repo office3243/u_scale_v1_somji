@@ -8,6 +8,7 @@ from materials.models import Material
 from parties.models import Party
 from django.http import JsonResponse
 from .forms import ChallanRawCreateForm
+from django.forms import modelformset_factory, inlineformset_factory
 
 
 @login_required
@@ -31,6 +32,23 @@ def challan_update(request, challan_no):
         parties = Party.objects.filter(is_active=True)
         context = {'materials': materials, "parties": parties, "challan": challan}
         return render(request, "challans/update.html", context)
+
+
+@login_required
+def challan_preview_update(request, challan_no):
+    challan = get_object_or_404(Challan, challan_no=challan_no)
+
+    WeightFormSet = inlineformset_factory(Challan, Weight, fields=("material", "weight_counts", "rate_per_unit", "amount"), extra=1)
+    if request.method == "POST":
+        formset = WeightFormSet(request.POST, instance=challan)
+        if formset.is_valid():
+            formset.save()
+            return redirect("challans:preview_update", challan_no=challan_no)
+    formset = WeightFormSet(instance=challan)
+    materials = Material.objects.filter(is_active=True)
+    parties = Party.objects.filter(is_active=True)
+    context = {'materials': materials, "parties": parties, "challan": challan, "formset": formset}
+    return render(request, "challans/preview_update.html", context)
 
 
 class ChallanCreateView(LoginRequiredMixin, CreateView):

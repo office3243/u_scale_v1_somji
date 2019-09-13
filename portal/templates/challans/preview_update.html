@@ -6,7 +6,12 @@
 {% block content %}
 
     <div class="jumbotron container">
-{#            {{ form|crispy }}#}
+        <form action="{% url "challans:update" challan_no=challan.challan_no%}">
+            {% csrf_token %}
+            {{ formset|crispy }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+
+        </form>
 
             <label>Party</label>
             <span class="font-weight-bold text-primary">{{ challan.party.get_display_text }}</span>
@@ -61,13 +66,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-
-        <div class="container">
-            <form method="post" action="{% url "cha" %}"
-
-        </div>
-
-        <a href="{% url "challans:preview_update" challan_no=challan.challan_no %}"><button class="btn btn-primary btn-block">Preview</button></a>
     </div>
 
 

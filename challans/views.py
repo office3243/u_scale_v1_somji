@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Challan, Weight
+from .models import Challan, Weight, WeightEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView
@@ -9,6 +9,7 @@ from parties.models import Party
 from django.http import JsonResponse
 from .forms import ChallanRawCreateForm
 from django.forms import modelformset_factory, inlineformset_factory
+from django.contrib import messages
 
 
 @login_required
@@ -59,16 +60,25 @@ class ChallanCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("portal:home")
 
 
-def weight_create(request):
+def weight_entry_create(request):
+    """
+    Weight instance will be get_or_created by passing material_id and challan_id .
+    A new instance of WeightEntry model will be created with relation to above Weight instance.
+    And material_id will be passed to request param named 'lmtid'
+    """
     if request.method == "POST":
-        challan_no = request.POST['challan_no']
-        weight_count = float(request.POST['weight_count'])
-        material_id = int(request.POST['material_id'])
-        challan = get_object_or_404(Challan, challan_no=challan_no)
-        weight = Weight.objects.get_or_create(challan=challan, material_id=material_id)[0]
-        weight.weight_counts += "{},".format(weight_count)
-        weight.save()
-        # return JsonResponse({"weight": weight})
+        challan = get_object_or_404(Challan, challan_no=request.POST['challan_no'])
+        material_id = request.POST['material_id']
+        material = get_object_or_404(Material, id=material_id)
+        weight = Weight.objects.get_or_create(challan=challan, material=material)[0]
+        entry = float(request.POST['entry_weight'])
+        weight_entry = WeightEntry.objects.create(weight=weight, entry=entry)
+        try:
+            """for fields validation"""
+            weight_entry.full_clean()
+        except Exception as e:
+            messages.warning(request, e)
+            weight_entry.delete()
         return redirect(str(challan.get_update_url) + "?lmtid={}".format(material_id))
     else:
         return redirect("portal:home")
@@ -84,3 +94,26 @@ class ChallanRawCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         challan = form.save()
         return redirect(reverse_lazy("challans:update", kwargs={"challan_no": challan.challan_no}))
+
+
+@login_required
+def challan_publish(request, challan_no):
+    challan = get_object_or_404(Challan, challan_no=challan_no)
+    if request.method == "POST":
+        print(request.POST, request.FILES)
+        gateway_choice = request.POST['gateway_choice']
+        is_payed = request.POST['is_payed']
+        extra_info = request.POST['extra_info']
+        image = request.FILES['image']
+        challan.payment_gateway_choice = gateway_choice
+        challan.is_payed = is_payed
+        challan.image = image
+        challan.extra_info = extra_info
+        challan.save()
+        return redirect("portal:home")
+    else:
+        materials = Material.objects.filter(is_active=True)
+        parties = Party.objects.filter(is_active=True)
+        context = {'materials': materials, "parties": parties, "challan": challan}
+        return render(request, "challans/update.html", context)
+

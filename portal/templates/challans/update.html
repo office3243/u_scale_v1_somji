@@ -8,17 +8,19 @@
     <div class="jumbotron container">
 {#            {{ form|crispy }}#}
 
-            <label>Party</label>
+            <h3 class="text-black-50 font-weight-bold text-center">Create Challan</h3>
+
+            <label class="font-weight-bold">Party Code : </label>
             <span class="font-weight-bold text-primary">{{ challan.party.get_display_text }}</span>
             <br>
-            <label>Challan No</label>
+            <label class="font-weight-bold">Challan No : </label>
             <span class="font-weight-bold text-primary">{{ challan.challan_no }}</span>
             <br>
-            <label>Challan Total</label>
+            <label class="font-weight-bold">Challan Total : </label>
             <span class="font-weight-bold text-primary">{{ challan.weights_amount }}</span>
 
-            <div class="container text-center pick_material">
-                <label>Pick Material</label>
+            <div class="container text-center pick_material jumbotron">
+                <label class="text-black-50 font-weight-bold">Pick Material</label>
                 <div class="row">
                     {% for material in materials %}
 
@@ -28,18 +30,23 @@
                 </div>
             </div>
             <hr>
-            <div class="container">
-                <label>Current Material</label>
+            <div class="container text-center jumbotron">
+
+                <label class="font-weight-bold text-black-50" for="current_material">Current Material</label><br>
                 <button class="btn btn-primary btn-lg" id="current_material" material_id="{{ materials.first.id }}">{{ materials.first.get_display_text }}</button>
-            </div>
-            <div class="container">
-                <form method="post" action="{% url "challans:weight_create" %}">
+
+                <form method="post" action="{% url "challans:weight_entry_create" %}">
                     {% csrf_token %}
-                    Challan : <input name="challan_no" value="{{ challan.challan_no }}">
+                    <input name="challan_no" value="{{ challan.challan_no }}" hidden>
                     <br>
-                    Material : <input id="material_input" name="material_id">
+                    <input id="material_input" name="material_id" hidden>
                     <br>
-                    Weight : <input name="weight_count" material_id="{{ materials.first.id }}">
+                    <div class="row text-center">
+                        <div class="form-group col-lg-6" style="margin: auto">
+                            <label for="weight_input" class="font-left font-weight-bold text-black-50">Enter Weight</label>
+                            <input id="weight_input" class="form-control float-right" name="entry_weight" material_id="{{ materials.first.id }}">
+                        </div>
+                    </div>
                     <br><br>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </form>
@@ -51,8 +58,8 @@
                     {% for weight in challan.weight_set.all %}
                         <tr>
                             <td>{{ weight.material.code }}</td>
-                            {% for weight_count in weight.get_weight_counts_list %}
-                                <td>{{ weight_count }}</td>
+                            {% for weight_entry in weight.weightentry_set.all %}
+                                <td>{{ weight_entry.entry }}</td>
                             {% endfor %}
                             <td>Total = {{ weight.total_weight }}</td>
                             <td>Rate = {{ weight.rate_per_unit }}</td>
@@ -61,12 +68,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-
-        <div class="container">
-            <form method="post" action="{% url "cha" %}"
-
-        </div>
-
         <a href="{% url "challans:preview_update" challan_no=challan.challan_no %}"><button class="btn btn-primary btn-block">Preview</button></a>
     </div>
 

@@ -1,20 +1,42 @@
 from django.urls import reverse_lazy
 from django.db import models
-from django.core.validators import validate_comma_separated_integer_list
+from django.core.validators import MinValueValidator
 from . import validators
 from django.db.models import Sum, Count, Max, Min
 from django.conf import settings
 from django.db.models.signals import post_save, pre_save, m2m_changed
 import decimal
-from rates.models import GroupRate, RateGroup, IndividualRate
+from rates.models import RateGroup, MaterialRate
+
+
+class WeightEntry(models.Model):
+
+    weight = models.ForeignKey("Weight", on_delete=models.CASCADE)
+    entry = models.FloatField(validators=[MinValueValidator(0.10), ],)
+
+    def __str__(self):
+        return str(self.entry)
+
+    class Meta:
+        verbose_name_plural = "Weight Entries"
+
+
+def save_signal_to_parent(sender, instance, *args, **kwargs):
+    """to send signal to parent model Weight on each save"""
+    return instance.weight.save()
+
+
+post_save.connect(save_signal_to_parent, sender=WeightEntry)
 
 
 class Weight(models.Model):
 
     challan = models.ForeignKey("Challan", on_delete=models.CASCADE)
     material = models.ForeignKey("materials.Material", on_delete=models.CASCADE)
-    weight_counts = models.CharField(max_length=254, validators=[validate_comma_separated_integer_list, ], default='')
-    total_weight = models.FloatField(validators=[validators.validate_positive_float], default=0)
+
+    report_weight = models.FloatField(default=0.00)
+
+    total_weight = models.FloatField(validators=[MinValueValidator(0.00)], default=0.00)
     rate_per_unit = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
@@ -25,40 +47,39 @@ class Weight(models.Model):
         unique_together = ("challan", "material")
 
     @property
-    def get_weight_counts_list(self):
-        return map(float, self.weight_counts.split(",")[:-1])
+    def calculate_total_weight(self):
+        """to return sum of all weight entries in relation. if not exists return 0.00"""
+        if self.weightentry_set.exists():
+            return self.weightentry_set.aggregate(total_weight=Sum("entry"))['total_weight'] - self.report_weight
+        return 0.00
+
+    @property
+    def calculate_rate(self):
+        return 10.00
+
+    @property
+    def calculate_amount(self):
+        return self.rate_per_unit * decimal.Decimal(self.total_weight)
 
 
-def assign_total_weight_and_amount(sender, instance, *args, **kwargs):
-    if instance.weight_counts != "":
-        print("weight count not ''")
-        total_weight = sum(instance.get_weight_counts_list)
-        if instance.total_weight != total_weight:
-            print("Total weight")
-            instance.total_weight = total_weight
-            instance.save()
-        individual_rates = instance.challan.party.individualrate_set.filter(is_active=True, material=instance.material)
-        if individual_rates.exists():
-            rate = individual_rates.first()
-        else:
-            group_rates = instance.challan.party.rate_group.grouprate_set.filter(is_active=True, material=instance.material)
-            if group_rates.exists():
-                rate = group_rates.first()
-            else:
-                rate = None
-        if rate is not None and instance.rate_per_unit != rate.amount:
-            print("Rate not None")
-            instance.rate_per_unit = rate.amount
-            instance.save()
-        amount = decimal.Decimal(instance.total_weight) * decimal.Decimal(instance.rate_per_unit)
-        if instance.amount != amount:
-            print("Amount not matching")
-            instance.amount = amount
-            instance.save()
+def assign_changed_fields(sender, instance, *args, **kwargs):
+    """to assign weight, rate and amount of weight model on each save"""
+    calculated_weight = decimal.Decimal(instance.calculate_total_weight)
+    if instance.total_weight != calculated_weight:
+        instance.total_weight = calculated_weight
+        instance.save()
+    if instance.rate_per_unit == 0.00:
+        calculated_rate = decimal.Decimal(instance.calculate_rate)
+        instance.rate_per_unit = calculated_rate
+        instance.save()
+    calculated_amount = instance.calculate_amount
+    if instance.amount != calculated_amount:
+        instance.amount = calculated_amount
+        instance.save()
     instance.challan.save()
 
 
-post_save.connect(assign_total_weight_and_amount, sender=Weight)
+post_save.connect(assign_changed_fields, sender=Weight)
 
 
 def challan_no_generator():
@@ -67,9 +88,9 @@ def challan_no_generator():
 
 class Challan(models.Model):
 
-    PAYMENT_GATEWAY_TYPE = (("CS", "Cash"), ("AC", "Account"), ("AL", "Account Less"))
-    payment_gateway_type = models.CharField(max_length=2, choices=PAYMENT_GATEWAY_TYPE)
-    is_payed = models.BooleanField()
+    PAYMENT_GATEWAY_CHOICES = (("CS", "Cash"), ("AC", "Account"), ("AL", "Account Less"))
+    payment_gateway_choice = models.CharField(max_length=2, choices=PAYMENT_GATEWAY_CHOICES)
+    is_payed = models.BooleanField(default=False)
 
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     challan_no = models.CharField(max_length=32, unique=True, default=challan_no_generator)
@@ -78,12 +99,12 @@ class Challan(models.Model):
     extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
-    is_generated = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False)
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
 
     extra_info = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
-    generated_on = models.DateTimeField(blank=True, null=True)
+    published_on = models.DateTimeField(blank=True, null=True)
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -95,7 +116,10 @@ class Challan(models.Model):
 
     @property
     def calculate_weights_amount(self):
-        return self.weight_set.aggregate(amount=Sum("amount"))['amount']
+        if self.weight_set.exists():
+            return self.weight_set.aggregate(amount=Sum("amount"))['amount']
+        else:
+            return 0.00
 
     @property
     def get_update_url(self):
@@ -103,11 +127,11 @@ class Challan(models.Model):
 
 
 def assign_weights_amount(sender, instance, *args, **kwargs):
-    if instance.weight_set.exists():
-        weights_amount = instance.calculate_weights_amount
-        if instance.weights_amount != weights_amount:
-            instance.weights_amount = weights_amount
-            instance.save()
+    """to assign all weights amount on each save"""
+    weights_amount = instance.calculate_weights_amount
+    if instance.weights_amount != weights_amount:
+        instance.weights_amount = weights_amount
+        instance.save()
 
 
 post_save.connect(assign_weights_amount, sender=Challan)

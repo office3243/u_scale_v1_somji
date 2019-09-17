@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class RateGroup(models.Model):
@@ -14,40 +15,28 @@ class RateGroup(models.Model):
         return self.name
 
 
-class GroupRate(models.Model):
-
-    rate_group = models.ForeignKey(RateGroup, on_delete=models.CASCADE)
+class MaterialRate(models.Model):
 
     material = models.ForeignKey("materials.Material", on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=9, decimal_places=2)
+    rate_group = models.ForeignKey(RateGroup, on_delete=models.CASCADE)
+    parties = models.ManyToManyField("parties.Party")
 
+    amount = models.DecimalField(max_digits=9, decimal_places=2)
     extra_info = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.amount)
+        return "{} - {} (Group {}({}) and {} Individual Parties)".format(self.material.get_display_text, self.amount,
+                                                                         self.rate_group.get_display_text,
+                                                                         self.rate_group.party_set.count(),
+                                                                         self.parties.count())
 
-    @property
-    def get_display_text(self):
-        return str(self.amount)
+    def clean(self):
+        super().clean()
+        for party in self.parties.all():
+            if party.materialrate_set.filter(material=self.material).exclude(id=self.id).count() > 0:
+                raise ValidationError("A Party may occur in only one Rate for a material!")
 
     class Meta:
         unique_together = ("material", "rate_group")
 
-
-class IndividualRate(models.Model):
-
-    parties = models.ManyToManyField("parties.Party")
-
-    material = models.ForeignKey("materials.Material", on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=9, decimal_places=2)
-
-    extra_info = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return str(self.amount)
-
-    @property
-    def get_display_text(self):
-        return str(self.amount)

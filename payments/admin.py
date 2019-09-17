@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import AccountTransaction, Payment, WalletTransaction
 
-# Register your models here.
+
+admin.site.register(AccountTransaction)
+admin.site.register(Payment)
+admin.site.register(WalletTransaction)
+

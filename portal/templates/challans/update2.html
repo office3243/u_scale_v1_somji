@@ -1,0 +1,141 @@
+{#{% extends "portal/base.html" %}#}
+{#{% load crispy_forms_tags %}#}
+{##}
+{#{% block title %}Create Challan{% endblock %}#}
+{##}
+{#{% block content %}#}
+{##}
+{#    <div class="jumbotron container">#}
+{#            {{ form|crispy }}#}
+{##}
+{#            <label>Party</label>#}
+{#            <span class="font-weight-bold text-primary">{{ challan.party.get_display_text }}</span>#}
+{#            <br>#}
+{#            <label>Challan No</label>#}
+{#            <span class="font-weight-bold text-primary">{{ challan.challan_no }}</span>#}
+{#            <br>#}
+{#            <label>Challan Total</label>#}
+{#            <span class="font-weight-bold text-primary">{{ challan.weights_amount }}</span>#}
+{##}
+{#            <div class="container text-center pick_material">#}
+{#                <label>Pick Material</label>#}
+{#                <div class="row">#}
+{#                    {% for material in materials %}#}
+{##}
+{#                        <button class="btn btn-lg btn-primary   mt-selector" id="material_btn_{{ material.id }}" material_id="{{ material.id }}">{{ material.get_display_text }}</button>#}
+{#                        <a style="margin: 10px" id="material_btn_{{ material.id }}" class="card bg-primary col-lg-2 mt-selector" material_id="{{ material.id }}">{{ material.get_display_text }}</a>#}
+{#                    {% endfor %}#}
+{#                </div>#}
+{#            </div>#}
+{#            <hr>#}
+{#            <div class="container">#}
+{#                <label>Current Material</label>#}
+{#                <button class="btn btn-primary btn-lg" id="current_material" material_id="{{ materials.first.id }}">{{ materials.first.get_display_text }}</button>#}
+{#            </div>#}
+{#            <div class="container">#}
+{#                <form method="post" action="{% url "challans:weight_create" %}">#}
+{#                    {% csrf_token %}#}
+{#                    Challan : <input name="challan_no" value="{{ challan.challan_no }}">#}
+{#                    <br>#}
+{#                    Material : <input id="material_input" name="material_id">#}
+{#                    <br>#}
+{#                    Weight : <input name="weight_count" material_id="{{ materials.first.id }}">#}
+{#                    <br><br>#}
+{#                    <button type="submit" class="btn btn-primary">Save</button>#}
+{#                </form>#}
+{#            </div>#}
+{##}
+{##}
+{#            <table class="table table-striped table-info table-bordered" id="thetable">#}
+{#                <tbody>#}
+{#                    {% for weight in challan.weight_set.all %}#}
+{#                        <tr>#}
+{#                            <td>{{ weight.material.code }}</td>#}
+{#                            {% for weight_count in weight.get_weight_counts_list %}#}
+{#                                <td>{{ weight_count }}</td>#}
+{#                            {% endfor %}#}
+{#                            <td>Total = {{ weight.total_weight }}</td>#}
+{#                            <td>Rate = {{ weight.rate_per_unit }}</td>#}
+{#                            <td>Amount = {{ weight.amount }}</td>#}
+{#                        </tr>#}
+{#                    {% endfor %}#}
+{#                </tbody>#}
+{#            </table>#}
+{##}
+{#        <div class="container">#}
+{#            <form method="post" enctype="multipart/form-data" action="{% url "challans:publish" challan_no=challan.challan_no %}">#}
+{#                {% csrf_token %}#}
+{##}
+{#                <div class="row">#}
+{#                    <div class="form-group col-lg-4">#}
+{#                        <input name="image" type="file">#}
+{#                    </div>#}
+{#                    <div class="form-group col-lg-4">#}
+{#                        <input class="form-control" name="is_payed" type="radio" required>#}
+{#                    </div>#}
+{#                    <div class="form-group col-lg-4">#}
+{#                        <select class="form-control" name="gateway_choice">#}
+{#                            <option value="CS">Cash</option>#}
+{#                            <option value="AC">Account</option>#}
+{#                            <option value="AL">Account Less</option>#}
+{#                        </select>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="form-group">#}
+{#                    <textarea name="extra_info" class="form-control"></textarea>#}
+{#                </div>#}
+{##}
+{#                <button class="btn btn-primary btn-lg">Publish</button>#}
+{#            </form>#}
+{#        </div>#}
+{##}
+{#        <a href="{% url "challans:preview_update" challan_no=challan.challan_no %}"><button class="btn btn-primary btn-block">Preview</button></a>#}
+{#    </div>#}
+{##}
+{##}
+{#    <script type="text/javascript">#}
+{##}
+{#        $(function() {#}
+{#    var t = $('#thetable tbody').eq(0);#}
+{#    var r = t.find('tr');#}
+{#    var cols= r.length;#}
+{#    var rows= r.eq(0).find('td').length;#}
+{#    var cell, next, tem, i = 0;#}
+{#    var tb= $('<tbody></tbody>');#}
+{##}
+{#    while(i<rows){#}
+{#        cell= 0;#}
+{#        tem= $('<tr></tr>');#}
+{#        while(cell<cols){#}
+{#            next= r.eq(cell++).find('td').eq(0);#}
+{#            tem.append(next);#}
+{#        }#}
+{#        tb.append(tem);#}
+{#        ++i;#}
+{#    }#}
+{#    $('#thetable').append(tb);#}
+{#    $('#thetable').show();#}
+{#});#}
+{##}
+{##}
+{#        let weightedMaterials = {};#}
+{##}
+{#        $(".mt-selector").on("click", function () {#}
+{#            $("#current_material").attr("material_id", $(this).attr("material_id"));#}
+{#            $("#current_material").text($(this).text());#}
+{#            $("#material_input").val($(this).attr("material_id"))#}
+{##}
+{#        });#}
+{##}
+{#    var url_string = window.location.href;#}
+{#    var url = new URL(url_string);#}
+{#    var lmtid = url.searchParams.get("lmtid");#}
+{#    console.log(lmtid);#}
+{#    $("#material_input").val(lmtid);#}
+{#    $("#material_btn_" + lmtid)[0].click().attr("id");#}
+{##}
+{#    </script>#}
+{##}
+{##}
+{##}
+{#{% endblock %}#}

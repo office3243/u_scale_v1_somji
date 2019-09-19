@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from materials.models import Material
 from parties.models import Party
 from django.http import JsonResponse
-from .forms import ChallanRawCreateForm
+from .forms import ChallanRawCreateForm, WeightForm
 from django.forms import modelformset_factory, inlineformset_factory
 from django.contrib import messages
 
@@ -38,8 +38,7 @@ def challan_update(request, challan_no):
 @login_required
 def challan_preview_update(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no)
-
-    WeightFormSet = inlineformset_factory(Challan, Weight, fields=("material", "weight_counts", "rate_per_unit", "amount"), extra=1)
+    WeightFormSet = inlineformset_factory(Challan, Weight, form=WeightForm, extra=0, can_delete=False)
     if request.method == "POST":
         formset = WeightFormSet(request.POST, instance=challan)
         if formset.is_valid():
@@ -49,7 +48,23 @@ def challan_preview_update(request, challan_no):
     materials = Material.objects.filter(is_active=True)
     parties = Party.objects.filter(is_active=True)
     context = {'materials': materials, "parties": parties, "challan": challan, "formset": formset}
-    return render(request, "challans/preview_update.html", context)
+    return render(request, "challans/update.html", context)
+
+
+# @login_required
+# def challan_preview_update(request, challan_no):
+#     challan = get_object_or_404(Challan, challan_no=challan_no)
+#     WeightFormSet = inlineformset_factory(Challan, Weight, form=WeightForm, extra=1)
+#     if request.method == "POST":
+#         formset = WeightFormSet(request.POST, instance=challan)
+#         if formset.is_valid():
+#             formset.save()
+#             return redirect("challans:preview_update", challan_no=challan_no)
+#     formset = WeightFormSet(instance=challan)
+#     materials = Material.objects.filter(is_active=True)
+#     parties = Party.objects.filter(is_active=True)
+#     context = {'materials': materials, "parties": parties, "challan": challan, "formset": formset}
+#     return render(request, "challans/preview_update.html", context)
 
 
 class ChallanCreateView(LoginRequiredMixin, CreateView):
@@ -67,18 +82,23 @@ def weight_entry_create(request):
     And material_id will be passed to request param named 'lmtid'
     """
     if request.method == "POST":
+        entry = float(request.POST['entry_weight'])
         challan = get_object_or_404(Challan, challan_no=request.POST['challan_no'])
         material_id = request.POST['material_id']
-        material = get_object_or_404(Material, id=material_id)
-        weight = Weight.objects.get_or_create(challan=challan, material=material)[0]
-        entry = float(request.POST['entry_weight'])
-        weight_entry = WeightEntry.objects.create(weight=weight, entry=entry)
-        try:
-            """for fields validation"""
-            weight_entry.full_clean()
-        except Exception as e:
-            messages.warning(request, e)
-            weight_entry.delete()
+        """dont allow entry less than 0.1"""
+        if entry > 0.1:
+            print(request.POST)
+            material = get_object_or_404(Material, id=material_id)
+            weight = Weight.objects.get_or_create(challan=challan, material=material)[0]
+            weight_entry = WeightEntry.objects.create(weight=weight, entry=entry)
+            try:
+                """for fields validation"""
+                weight_entry.full_clean()
+            except Exception as e:
+                messages.warning(request, e)
+                weight_entry.delete()
+        else:
+            messages.warning(request, "Entry Cannot be less than 0.1")
         return redirect(str(challan.get_update_url) + "?lmtid={}".format(material_id))
     else:
         return redirect("portal:home")

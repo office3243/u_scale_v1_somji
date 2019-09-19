@@ -40,6 +40,8 @@ class Weight(models.Model):
     rate_per_unit = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
+    updated_on = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return "{} * {} kg = {}".format(self.material.get_display_text, self.total_weight, self.amount)
 
@@ -60,6 +62,10 @@ class Weight(models.Model):
     @property
     def calculate_amount(self):
         return self.rate_per_unit * decimal.Decimal(self.total_weight)
+
+    @property
+    def get_recent_entry(self):
+        return self.weightentry_set.last()
 
 
 def assign_changed_fields(sender, instance, *args, **kwargs):
@@ -99,6 +105,7 @@ class Challan(models.Model):
     extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
+    # is_entry_done = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False)
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
 
@@ -124,6 +131,10 @@ class Challan(models.Model):
     @property
     def get_update_url(self):
         return reverse_lazy("challans:update", kwargs={"challan_no": self.challan_no})
+
+    @property
+    def get_recent_weight_entry(self):
+        return self.weight_set.latest("updated_on").get_recent_entry
 
 
 def assign_weights_amount(sender, instance, *args, **kwargs):

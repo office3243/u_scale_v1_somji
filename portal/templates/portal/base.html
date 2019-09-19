@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     {% block full_title %}<title>{% block title %}{% endblock %} - U Scale</title>{% endblock %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static "js/jquery-3.4.1.min.js" %}"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
     <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
     <link href="{% static "css/mdb.min.css" %}" rel="stylesheet">
@@ -30,7 +30,6 @@
 
   <!-- SCRIPTS -->
   <!-- JQuery -->
-  <script type="text/javascript" src="{% static "js/jquery-3.4.1.min.js" %}"></script>
   <!-- Bootstrap tooltips -->
   <script type="text/javascript" src="{% static "js/popper.min.js" %}"></script>
   <!-- Bootstrap core JavaScript -->

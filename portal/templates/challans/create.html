@@ -1,70 +1,14 @@
 {% extends "portal/base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Create Challan{% endblock %}
+{% block title %}Raw Create Challan{% endblock %}
 
 {% block content %}
-
     <div class="jumbotron container">
-        <form method="post" action="{% url "challans:create" %}">
+        <form method="post">
             {% csrf_token %}
-{#            {{ form|crispy }}#}
-
-            <label for="party_id">Select Party</label>
-            <select id="party_id" name="party_id">
-                {% for party in parties %}
-                    <option value="{{ party.id }}">{{ party.get_display_text }}</option>
-                {% endfor %}
-            </select>
-
-            <div class="container text-center pick_material">
-                <label>Pick Material</label>
-                <div class="row">
-                    {% for material in materials %}
-                        <a style="margin: 10px" class="card bg-primary col-lg-2 mt-selector" material_id="{{ material.id }}">{{ material.get_display_text }}</a>
-                    {% endfor %}
-                </div>
-            </div>
-            <hr>
-            <div class="container">
-                <label>Current Material</label>
-                <button class="btn btn-primary btn-lg" id="current_material" material_id="{{ materials.first.id }}">{{ materials.first.get_display_text }}</button>
-            </div>
-            <div class="container">
-                <input id="weight_input" material_id="{{ materials.first.id }}">
-                <button type="button" id="weight_input_click">Save</button>
-            </div>
-
-            <div class="container">
-                <div class="row">
-                    {% for material in materials %}
-                        <div class="col-lg-1 border" material_id="{{ material.id }}" total=0>
-                            <ul type="">
-                                <li class="border">
-                                    <span>{{ material.get_display_text }}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <input type="submit" class="btn btn-info" value="Create">
+            {{ form|crispy }}
+            <input type="submit" class="btn btn-primary" value="Create">
         </form>
     </div>
-
-
-    <script type="text/javascript">
-
-        let weightedMaterials = {};
-
-        $(".mt-selector").on("click", function () {
-            $("#current_material").attr("material_id", $(this).attr("material_id"));
-            $("#current_material").text($(this).text());
-            $("#weight_input").attr("material_id", $(this).attr("material_id"));
-
-        })
-
-    </script>
-
 {% endblock %}

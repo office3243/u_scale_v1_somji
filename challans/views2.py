@@ -13,7 +13,18 @@ from django.contrib import messages
 
 
 @login_required
-def challan_entries(request, challan_no):
+def challan_create(request):
+    if request.method == "POST":
+        pass
+    else:
+        materials = Material.objects.filter(is_active=True)
+        parties = Party.objects.filter(is_active=True)
+        context = {'materials': materials, "parties": parties}
+        return render(request, "challans/create.html", context)
+
+
+@login_required
+def challan_update(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no)
     if request.method == "POST":
         pass
@@ -21,8 +32,7 @@ def challan_entries(request, challan_no):
         materials = Material.objects.filter(is_active=True)
         parties = Party.objects.filter(is_active=True)
         context = {'materials': materials, "parties": parties, "challan": challan}
-        return render(request, "challans/entries.html", context)
-
+        return render(request, "challans/update.html", context)
 
 
 @login_required
@@ -39,6 +49,30 @@ def challan_preview_update(request, challan_no):
     parties = Party.objects.filter(is_active=True)
     context = {'materials': materials, "parties": parties, "challan": challan, "formset": formset}
     return render(request, "challans/update.html", context)
+
+
+# @login_required
+# def challan_preview_update(request, challan_no):
+#     challan = get_object_or_404(Challan, challan_no=challan_no)
+#     WeightFormSet = inlineformset_factory(Challan, Weight, form=WeightForm, extra=1)
+#     if request.method == "POST":
+#         formset = WeightFormSet(request.POST, instance=challan)
+#         if formset.is_valid():
+#             formset.save()
+#             return redirect("challans:preview_update", challan_no=challan_no)
+#     formset = WeightFormSet(instance=challan)
+#     materials = Material.objects.filter(is_active=True)
+#     parties = Party.objects.filter(is_active=True)
+#     context = {'materials': materials, "parties": parties, "challan": challan, "formset": formset}
+#     return render(request, "challans/preview_update.html", context)
+
+
+class ChallanCreateView(LoginRequiredMixin, CreateView):
+
+    model = Challan
+    template_name = "challans/create.html"
+    fields = "__all__"
+    success_url = reverse_lazy("portal:home")
 
 
 def weight_entry_create(request):
@@ -65,21 +99,21 @@ def weight_entry_create(request):
                 weight_entry.delete()
         else:
             messages.warning(request, "Entry Cannot be less than 0.1")
-        return redirect(str(challan.get_entries_url) + "?lmtid={}".format(material_id))
+        return redirect(str(challan.get_update_url) + "?lmtid={}".format(material_id))
     else:
         return redirect("portal:home")
 
 
-class ChallanCreateView(LoginRequiredMixin, CreateView):
+class ChallanRawCreateView(LoginRequiredMixin, CreateView):
 
     model = Challan
-    template_name = "challans/create.html"
+    template_name = "challans/raw_create.html"
     fields = ("party", )
     success_url = reverse_lazy("portal:home")
 
     def form_valid(self, form):
         challan = form.save()
-        return redirect(challan.get_entries_url)
+        return redirect(reverse_lazy("challans:update", kwargs={"challan_no": challan.challan_no}))
 
 
 @login_required

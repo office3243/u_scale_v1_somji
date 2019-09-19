@@ -105,7 +105,7 @@ class Challan(models.Model):
     extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
-    # is_entry_done = models.BooleanField(default=False)
+    is_entry_done = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False)
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
 
@@ -127,6 +127,10 @@ class Challan(models.Model):
             return self.weight_set.aggregate(amount=Sum("amount"))['amount']
         else:
             return 0.00
+
+    @property
+    def get_entries_url(self):
+        return reverse_lazy("challans:entries", kwargs={'challan_no': self.challan_no})
 
     @property
     def get_update_url(self):

@@ -7,4 +7,5 @@ urlpatterns = [
     url(r"^", include('portal.urls', namespace="portal")),
     url(r"^accounts/", include('accounts.urls', namespace="accounts")),
     url(r"^challans/", include('challans.urls', namespace="challans")),
+    url(r"^payments/", include('payments.urls', namespace="payments")),
 ]

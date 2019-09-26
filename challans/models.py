@@ -94,8 +94,6 @@ def challan_no_generator():
 
 class Challan(models.Model):
 
-    PAYMENT_GATEWAY_CHOICES = (("CS", "Cash"), ("AC", "Account"), ("AL", "Account Less"))
-    payment_gateway_choice = models.CharField(max_length=2, choices=PAYMENT_GATEWAY_CHOICES)
     is_payed = models.BooleanField(default=False)
 
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
@@ -135,6 +133,10 @@ class Challan(models.Model):
     @property
     def get_update_url(self):
         return reverse_lazy("challans:update", kwargs={"challan_no": self.challan_no})
+
+    @property
+    def get_payment_add_url(self):
+        return reverse_lazy("payments:add", kwargs={"challan_no": self.challan_no})
 
     @property
     def get_recent_weight_entry(self):

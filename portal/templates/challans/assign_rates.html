@@ -24,7 +24,7 @@
     <div class="container" style="padding: 50px 20px">
 
         <div class="heading" id="heading">
-            <h3 class="text-black-50 font-weight-bold text-center">Create Challan</h3>
+            <h3 class="text-black-50 font-weight-bold text-center">Assign Rates</h3>
         </div>
         <div class="container" id="challanDetails">
 
@@ -46,49 +46,6 @@
             </table>
         </div>
         <br><hr>
-        <div class="text-center">
-            <div class="row">
-                <div id="pickMaterial" class="col-lg-6">
-                    <label class="text-black-50 font-weight-bold">Pick Material</label>
-                    <div class="row">
-                        {% for material in materials %}
-                            <button class="btn btn-lg btn-primary mt-selector" id="material_btn_{{ material.id }}" material_id="{{ material.id }}">{{ material.get_display_text }}</button>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div id="weightForm" class="col-6">
-                <label class="font-weight-bold text-black-50" for="current_material">Current Material</label><br>
-                <button class="btn btn-primary btn-lg" id="current_material" material_id="{{ materials.first.id }}">{{ materials.first.get_display_text }}</button>
-
-                <br><br><hr>
-                <form method="post" action="{% url "challans:weight_entry_create" %}">
-                    {% csrf_token %}
-                    <input name="challan_no" value="{{ challan.challan_no }}" hidden>
-                    <input id="material_input" name="material_id" hidden value="{{ materials.first.id }}">
-                    <div class="row col-lg-10" style="margin: auto">
-                        <div class="float-left col-lg-8 mt-2">
-                            <div class="form-group">
-{#                                <label for="weight_input" class="font-weight-bold text-black-50">Enter Weight</label>#}
-                                <input id="weight_input" class="form-control" name="entry_weight" material_id="{{ materials.first.id }}" placeholder="Enter Weight">
-                            </div>
-                        </div>
-                        <div class="float-right col-lg-4 mb-5">
-                            <button type="submit" class="btn btn-primary btn-lg">Save</button>
-                        </div>
-                    </div>
-
-                </form>
-                <span class="font-weight-bold alert-primary alert">
-                    Last Weight Entry :
-                    {% with challan.get_recent_weight_entry as recent_entry%}
-                        {{ recent_entry.weight.material }} - {{ recent_entry.entry }}
-                    {% endwith %}
-                </span>
-
-            </div>
-            </div>
-        </div>
-        <hr>
         {% if challan.weight_set.exists %}
             <div class="entries" style="margin-top:50px">
                 <h3 class="text-center text-black-50 font-weight-bold">Weight Entries</h3>
@@ -136,7 +93,7 @@
             </div>
 
             <div class="formset" style="display: none">
-                <form method="post" id="formset" action="{% url "challans:preview_update" challan_no=challan.challan_no %}">
+                <form method="post" id="formset" action="{% url "challans:assign_rates" challan_no=challan.challan_no %}">
                     {% csrf_token %}
                     {{ formset|crispy }}
                 </form>

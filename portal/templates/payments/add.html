@@ -1,0 +1,48 @@
+{% extends "portal/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Payment{% endblock %}
+
+{% block content %}
+
+    <div class="container" style="padding: 50px 20px">
+
+        <div class="heading" id="heading">
+            <h3 class="text-black-50 font-weight-bold text-center">Payment</h3>
+        </div>
+        <div class="container" id="challanDetails">
+
+            <table class="table table-borderedsd table-primary">
+                <tbody>
+                    <tr>
+                        <th>Party Code</th>
+                        <td>{{ challan.party.get_display_text }}</td>
+                        <th>Challan No</th>
+                        <td>{{ challan.challan_no }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date</th>
+                        <td>{{ challan.created_on.date }}</td>
+                        <th>Time</th>
+                        <td>{{ challan.created_on.time }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <br><hr>
+
+        <div class="container payment_form">
+
+            <form method="{% url "payments:add" challan_no=challan.challan_no %}">
+
+
+
+            </form>
+
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

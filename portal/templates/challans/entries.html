@@ -1,7 +1,7 @@
 {% extends "portal/base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Cdreate Challan{% endblock %}
+{% block title %}Create Challan{% endblock %}
 
 {% block content %}
 <style>
@@ -18,7 +18,6 @@
            background-color: #4285f4;
            color: white;
            font-weight: bold;
-
        }
 </style>
     <div class="container" style="padding: 50px 20px">
@@ -98,7 +97,7 @@
                         </tbody>
                     </table>
                 </div>
-                <a href="{% url "challans:preview_update" challan_no=challan.challan_no %}"><button class="btn btn-primary btn-block">Preview</button></a>
+                <a href="{% url "challans:assign_rates" challan_no=challan.challan_no %}"><button class="btn btn-primary btn-block">Entries Done</button></a>
             </div>
         {% endif %}
     </div>
@@ -189,9 +188,8 @@
                                     [
                                         "{{ weight.material.get_display_text }}",
                                         {% for weight_entry in weight.weightentry_set.all %}{{ weight_entry.entry }},{% endfor %}
-                                        {{ weight.rate_per_unit }},
+                                        {{ weight.report_weight }},
                                         {{ weight.total_weight }},
-                                        {{ weight.amount }},
                                     ],
                                 {% endfor %}
                             ];
@@ -206,11 +204,11 @@
                     max_length = weightList[i].length;
                 }
             }
-            for(let j=0,l=3;j<max_length;j++){
+            for(let j=0,l=2;j<max_length;j++){
                let tr = document.createElement("tr");
                let th = document.createElement("th");
                let thStr;
-               if(j<max_length-3){
+               if(j<max_length-2){
                    // for Table Header Vertical
                    if (j===0){
                        thStr = "Materials"
@@ -227,7 +225,7 @@
                         if (j===0){
                             td.classList.add("tableMaterialHead");
                         }
-                        if(j< weightList[i].length-3){
+                        if(j< weightList[i].length-2){
                             txt= document.createTextNode(weightList[i][j]);
                         }else{
                             txt = document.createTextNode("");
@@ -240,10 +238,7 @@
                        thStr = "AMOUNT"
                    }
                    else if (j === (max_length-2)){
-                       thStr = "TOTAL"
-                   }
-                   else if (j === (max_length-3)){
-                       thStr = "RATE"
+                       thStr = "REPORT"
                    }
                    let thxt = document.createTextNode(thStr);
                    th.appendChild(thxt);

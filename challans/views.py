@@ -24,24 +24,30 @@ def challan_entries(request, challan_no):
         return render(request, "challans/entries.html", context)
 
 
+@login_required
+def entries_done(request, challan_no):
+    challan = get_object_or_404(Challan, challan_no=challan_no)
+    challan.is_entry_done = True
+    challan.save()
+    return redirect("challans:assign_rates", {"challan_no": challan.challan_no})
+
 
 @login_required
-def challan_preview_update(request, challan_no):
+def assign_rates(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no)
     WeightFormSet = inlineformset_factory(Challan, Weight, form=WeightForm, extra=0, can_delete=False)
     if request.method == "POST":
         formset = WeightFormSet(request.POST, instance=challan)
         if formset.is_valid():
             formset.save()
-            return redirect("challans:preview_update", challan_no=challan_no)
+            return redirect(challan.get_payment_add_url)
     formset = WeightFormSet(instance=challan)
-    materials = Material.objects.filter(is_active=True)
-    parties = Party.objects.filter(is_active=True)
-    context = {'materials': materials, "parties": parties, "challan": challan, "formset": formset}
-    return render(request, "challans/update.html", context)
+    context = {"challan": challan, "formset": formset}
+    return render(request, "challans/assign_rates.html", context)
 
 
 def weight_entry_create(request):
+
     """
     Weight instance will be get_or_created by passing material_id and challan_id .
     A new instance of WeightEntry model will be created with relation to above Weight instance.
@@ -103,3 +109,10 @@ def challan_publish(request, challan_no):
         context = {'materials': materials, "parties": parties, "challan": challan}
         return render(request, "challans/update.html", context)
 
+
+@login_required
+def create_payment(request):
+    if request.method == "POST":
+        pass
+    else:
+        pass

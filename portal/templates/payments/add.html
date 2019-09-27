@@ -12,7 +12,7 @@
         </div>
         <div class="container" id="challanDetails">
 
-            <table class="table table-borderedsd table-primary">
+            <table class="table table-bordered bg-primary text-white">
                 <tbody>
                     <tr>
                         <th>Party Code</th>
@@ -26,16 +26,56 @@
                         <th>Time</th>
                         <td>{{ challan.created_on.time }}</td>
                     </tr>
+                    <tr>
+                        <th>Total Amount</th>
+                        <td>{{ challan.total_amount }}</td>
+                    </tr>
+                    {% if wallet %}
+                        <tr>
+                            <th>Party Balance</th>
+                            <td>{{ wallet.balance }}</td>
+                            <th>Wallet Deduct Amount</th>
+                            <td>{{ wallet_payable_amount }}</td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
         <br><hr>
 
-        <div class="container payment_form">
+        <div class="container payment_form text-white font-weight-bold col-lg-8 jumbotron bg-primary">
 
-            <form method="{% url "payments:add" challan_no=challan.challan_no %}">
+            <form action="{% url "payments:add" challan_no=challan.challan_no %}" method="post">
 
+                {% csrf_token %}
 
+                <label for="payment_mode">Payment Mode</label>
+                <select name="payment_mode" id="payment_mode" class="form-control">
+                    <option value="FL">Full Payment</option>
+                    <option value="AL">Account Less Payment</option>
+                </select>
+                <hr>
+
+                <label for="cash_amount">Cash Amount</label>
+                <input name="cash_amount" class="form-control" id="cash_amount" type="number">
+                <hr>
+
+                <label for="account_amount">Account Amount</label>
+                <input name="account_amount" class="form-control" id="account_amount" type="number">
+                <hr>
+
+                <label for="ac_less_amount">Account Less Amount</label>
+                <input name="ac_less_amount" class="form-control" id="ac_less_amount" type="number">
+                <hr>
+
+                <label for="bank_account">Select Bank Account</label>
+                <select class="form-control" name="bank_account" id="bank_account">
+                    {% for account in challan.party.get_bank_accounts %}
+                        <option value="{{ account.id }}">{{ account.get_display_text }}</option>
+                    {% endfor %}
+                </select>
+
+                <button class="btn btn-info" type="submit">Done</button>
 
             </form>
 

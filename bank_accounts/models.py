@@ -8,5 +8,11 @@ class BankAccount(models.Model):
     branch_name = models.CharField(max_length=64)
     bank_name = models.CharField(max_length=64)
 
+    is_active = models.BooleanField(default=True)
+
     def __str__(self):
         return "{} - {}".format(self.party.name, self.bank_name)
+
+    @property
+    def get_display_text(self):
+        return "{} - {}".format(self.party.get_display_text, self.bank_name)

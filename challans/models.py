@@ -139,6 +139,10 @@ class Challan(models.Model):
         return reverse_lazy("payments:add", kwargs={"challan_no": self.challan_no})
 
     @property
+    def get_done_url(self):
+        return reverse_lazy("challans:done", kwargs={"challan_no": self.challan_no})
+
+    @property
     def get_recent_weight_entry(self):
         return self.weight_set.latest("updated_on").get_recent_entry
 
@@ -148,6 +152,10 @@ def assign_weights_amount(sender, instance, *args, **kwargs):
     weights_amount = instance.calculate_weights_amount
     if instance.weights_amount != weights_amount:
         instance.weights_amount = weights_amount
+        instance.save()
+    total_amount = instance.weights_amount + instance.extra_charges
+    if instance.total_amount != total_amount:
+        instance.total_amount = total_amount
         instance.save()
 
 

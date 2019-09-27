@@ -24,6 +24,7 @@ class Party(models.Model):
     whatsapp = models.CharField(max_length=13)
     email = models.EmailField(blank=True, null=True)
 
+    is_wallet_party = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -33,6 +34,14 @@ class Party(models.Model):
     def get_display_text(self):
         return self.name
 
+    @property
+    def get_wallet(self):
+        return Wallet.objects.get_or_create(party=self)[0]
+
+    @property
+    def get_bank_accounts(self):
+        return self.bankaccount_set.filter(is_active=True)
+
     class Meta:
         verbose_name = "Party"
         verbose_name_plural = "Parties"
@@ -40,11 +49,26 @@ class Party(models.Model):
 
 class Wallet(models.Model):
 
+    WALLET_TYPE_CHOICES = (("FL", "Full Pay"), ("FX", "Fix Amount Pay"))
+
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=9, decimal_places=2)
+    balance = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+
+    wallet_type = models.CharField(max_length=2, choices=WALLET_TYPE_CHOICES)
+    fixed_amount = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return "{} - {} Rs".format(self.party.get_display_text, self.balance)
+
+    def deduct_balance(self, amount):
+        self.balance -= amount
+        self.save()
+
+    def get_payable_amount(self, amount):
+        if self.wallet_type == "FX":
+            return self.fixed_amount
+        else:
+            return amount if self.balance > amount else self.balance
 
 
 class WalletAdvance(models.Model):

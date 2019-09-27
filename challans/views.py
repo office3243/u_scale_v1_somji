@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Challan, Weight, WeightEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView
+from django.views.generic import CreateView, TemplateView, DetailView
 from django.urls import reverse_lazy
 from materials.models import Material
 from parties.models import Party
@@ -110,9 +110,9 @@ def challan_publish(request, challan_no):
         return render(request, "challans/update.html", context)
 
 
-@login_required
-def create_payment(request):
-    if request.method == "POST":
-        pass
-    else:
-        pass
+class ChallanDoneView(LoginRequiredMixin, DetailView):
+
+    model = Challan
+    slug_url_kwarg = "challan_no"
+    slug_field = "challan_no"
+    template_name = "challans/done.html"

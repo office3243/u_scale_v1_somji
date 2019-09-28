@@ -146,6 +146,10 @@ class Challan(models.Model):
     def get_recent_weight_entry(self):
         return self.weight_set.latest("updated_on").get_recent_entry
 
+    @property
+    def get_payable_amount(self):
+        return self.total_amount
+
 
 def assign_weights_amount(sender, instance, *args, **kwargs):
     """to assign all weights amount on each save"""

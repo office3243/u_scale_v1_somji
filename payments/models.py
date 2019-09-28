@@ -64,7 +64,7 @@ class Payment(models.Model):
 
     # acless or non-acless in pyament mode choice- need to think
 
-    PAYMENT_MODE_CHOICES = (("FL", "Full Payment"), ("AL", "Account Less"))
+    PAYMENT_MODE_CHOICES = (("DP", "Direct Payment"), ("AL", "Account Less"))
     PAYMENT_STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
     challan = models.OneToOneField("challans.Challan", on_delete=models.CASCADE)

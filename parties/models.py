@@ -49,12 +49,12 @@ class Party(models.Model):
 
 class Wallet(models.Model):
 
-    WALLET_TYPE_CHOICES = (("FL", "Full Pay"), ("FX", "Fix Amount Pay"))
+    DEDUCT_TYPE_CHOICES = (("FD", "Full Deduct"), ("FXD", "Fix Amount Deduct"), ("NFD", "Non Fixed Amount Deduct"))
 
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
-    wallet_type = models.CharField(max_length=2, choices=WALLET_TYPE_CHOICES)
+    deduct_type = models.CharField(max_length=3, choices=DEDUCT_TYPE_CHOICES)
     fixed_amount = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
@@ -65,10 +65,12 @@ class Wallet(models.Model):
         self.save()
 
     def get_payable_amount(self, amount):
-        if self.wallet_type == "FX":
-            return self.fixed_amount
-        else:
+        if self.deduct_type == "FXD":
+            return self.fixed_amount if self.fixed_amount <= amount else amount
+        elif self.deduct_type == "FD":
             return amount if self.balance > amount else self.balance
+        else:
+            return amount//3 if self.balance > amount//3 else self.balance
 
 
 class WalletAdvance(models.Model):

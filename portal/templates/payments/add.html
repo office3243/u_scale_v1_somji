@@ -43,46 +43,164 @@
         </div>
         <br><hr>
 
-        <div class="container payment_form text-white font-weight-bold col-lg-8 jumbotron bg-primary">
+        <div class="container payment_form text-white font-weight-bold col-lg-8 jumbotron bg-info">
 
             <form action="{% url "payments:add" challan_no=challan.challan_no %}" method="post">
 
                 {% csrf_token %}
 
-                <label for="payment_mode">Payment Mode</label>
-                <select name="payment_mode" id="payment_mode" class="form-control">
-                    <option value="FL">Full Payment</option>
-                    <option value="AL">Account Less Payment</option>
-                </select>
+                <div class="form-group payment_mode_section">
+                    <label for="payment_mode">1 - Payment Mode</label>
+                    <select name="payment_mode" id="payment_mode" class="form-control">
+                        <option value="DP">Direct Payment</option>
+                        <option value="AL">Account Less Payment</option>
+                    </select>
+                </div>
                 <hr>
+                <div class="row ac_less_section">
+                    <div class="form-group col-lg-6">
+                        <label for="ac_less_amount">2 - Account Less Amount</label>
+                        <input name="ac_less_amount" class="form-control" id="ac_less_amount" type="number">
+                    </div>
+                    <div class="form-group col-lg-6">
+                        <label for="ac_less_deduct_type">Select Deduct Type</label>
+                        <select id="ac_less_deduct_type" name="ac_less_deduct_type" class="form-control ac_less_deduct_type">
+                            <option id="full_deduct" type="radio" value="FD">Full Deduct</option>
+                            <option id="part_deduct" type="radio" value="PD">Part Deduct</option>
+                        </select>
+                    </div>
 
-                <label for="cash_amount">Cash Amount</label>
-                <input name="cash_amount" class="form-control" id="cash_amount" type="number">
+                </div>
                 <hr>
+                <div class="non_ac_less_section">
+                    <div class="cash_section">
+                        <span>3 - Cash Section</span>
+                        <br><br>
+                        <div style="margin-left: 20px" class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" name="is_cash" id="is_cash" checked>
+                            <label class="custom-control-label" for="is_cash">Do You Want Cash Transaction ? </label>
+                        </div>
+                        <br>
+                        <div style="margin-left: 20px" class="form-group cash_mode_section">
+                            <label for="cash_amount">Cash Amount</label>
+                            <input name="cash_amount" class="form-control" id="cash_amount" type="number">
+                        </div>
+                        <hr>
+                    </div>
+                    <div class="account_section">
+                        <span>4 - Account Section</span>
+                        <br><br>
+                        <div style="margin-left: 20px" class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" name="is_account" id="is_account" checked>
+                            <label class="custom-control-label" for="is_account">Do You Want Account Transaction ?</label>
+                        </div>
+                        <br>
+                        <div style="margin-left: 20px" class="form-group account_mode_section clearfix">
+                            <label for="account_amount">Account Amount</label>
+                            <input name="account_amount" class="form-control" id="account_amount" type="number">
+                            <br>
+                            <div class="bank_account_section">
+                                <label for="bank_account">Select Bank Account</label>
+                                <select class="form-control" name="bank_account" id="bank_account">
+                                    {% for account in challan.party.get_bank_accounts %}
+                                        <option value="{{ account.id }}">{{ account.get_display_text }}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="#" class="font-weight-light float-right text-white">Add bank account +</a>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
 
-                <label for="account_amount">Account Amount</label>
-                <input name="account_amount" class="form-control" id="account_amount" type="number">
-                <hr>
-
-                <label for="ac_less_amount">Account Less Amount</label>
-                <input name="ac_less_amount" class="form-control" id="ac_less_amount" type="number">
-                <hr>
-
-                <label for="bank_account">Select Bank Account</label>
-                <select class="form-control" name="bank_account" id="bank_account">
-                    {% for account in challan.party.get_bank_accounts %}
-                        <option value="{{ account.id }}">{{ account.get_display_text }}</option>
-                    {% endfor %}
-                </select>
-
-                <button class="btn btn-info" type="submit">Done</button>
+                <button class="btn btn-primary btn-lg float-right" type="submit">Done</button>
+                <br>
 
             </form>
 
         </div>
 
-
     </div>
+
+    <script type="text/javascript">
+        let total_amount = {{ challan.total_amount }};
+        let total_pay = 0.00;
+        let wallet_payable_amount = {{ wallet_payable_amount }};
+        let wallet_deduct_type = "{{ wallet.deduct_type }}";
+
+        $("#is_cash").on("change", function () {
+           if ($(this).prop("checked") === false){
+               $(".cash_mode_section").hide();
+           }
+           else{
+               $(".cash_mode_section").show();
+           }
+        });
+
+        $("#is_account").on("change", function () {
+           if ($(this).prop("checked") === false){
+               $(".account_mode_section").hide();
+           }
+           else{
+               $(".account_mode_section").show();
+           }
+        });
+
+        $("#ac_less_deduct_type").on("change", function () {
+            if ($(this).val() === "FD"){
+                $(".non_ac_less_section").hide();
+                $("#ac_less_amount").val(wallet_payable_amount);
+                $("#ac_less_amount").addClass("disabled bg-light");
+            }
+            else {
+                $(".non_ac_less_section").show();
+                $("#ac_less_amount").removeClass("disabled bg-light");
+            }
+
+        });
+        $("#payment_mode").on("change", function () {
+            if ($(this).val() === "DP"){
+                $(".ac_less_section").hide();
+            }
+            else{
+                $(".ac_less_section").show();
+            }
+
+        });
+
+        function assign_pay_results(){
+            $("#total_amount").text(total_amount);
+            $("#total_pay").text(total_pay);
+        }
+
+        function assign_ac_less_deduct_type(){
+            if (total_amount > wallet_payable_amount || wallet_deduct_type !== "FD"){
+                if (total_amount > wallet_payable_amount){
+                  $("#full_deduct").attr("disabled", "disabled").addClass("bg-danger");
+                }
+                $("#ac_less_deduct_type").val("PD");
+            }
+            else {
+                $("#ac_less_deduct_type").val("FD");
+            }
+            $("#ac_less_deduct_type").change();
+        }
+
+        $(function () {
+            assign_pay_results();
+            {% if wallet_payable_amount %}
+                $("#payment_mode").val("AL");
+                $("#ac_less_amount").val({{ wallet_payable_amount }});
+            {% else %}
+                $("#payment_mode").val("DP");
+            {% endif %}
+            assign_ac_less_deduct_type();
+        });
+
+
+
+
+    </script>
 
 
 {% endblock %}

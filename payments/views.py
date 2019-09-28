@@ -17,14 +17,14 @@ def add(request, challan_no):
     total_amount = challan.total_amount
     if request.method == "POST":
         payment_mode = request.POST['payment_mode']
-        payment = Payment.objects.create(challan=challan, payment_mode=payment_mode, amount=total_amount)
+        payment = Payment.objects.get_or_create(challan=challan, payment_mode=payment_mode, amount=total_amount)
         cash_amount = decimal.Decimal(request.POST['cash_amount'])
         account_amount = decimal.Decimal(request.POST['account_amount'])
         bank_account = get_object_or_404(BankAccount, id=request.POST['bank_account'], party=party)
         cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(),
                                                           status="DN")
         account_transaction = AccountTransaction.objects.create(payment=payment, amount=account_amount, bank_account=bank_account)
-        ac_less_amount = request.POST['ac_less_amount']
+        ac_less_amount = decimal.Decimal(request.POST['ac_less_amount'])
         wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
                                                               amount=ac_less_amount, is_full_amount=False)
         return redirect(challan.get_done_url)

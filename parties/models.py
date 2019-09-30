@@ -36,7 +36,10 @@ class Party(models.Model):
 
     @property
     def get_wallet(self):
-        return Wallet.objects.get_or_create(party=self)[0]
+        try:
+            return Wallet.objects.get(party=self, is_active=True)
+        except:
+            return None
 
     @property
     def get_bank_accounts(self):
@@ -49,13 +52,14 @@ class Party(models.Model):
 
 class Wallet(models.Model):
 
-    DEDUCT_TYPE_CHOICES = (("FD", "Full Deduct"), ("FXD", "Fix Amount Deduct"), ("NFD", "Non Fixed Amount Deduct"))
+    DEDUCT_TYPE_CHOICES = (("FD", "Full Deduct"), ("PD", "Part Deduct"), ("FXD", "Fix Deduct"))
 
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
     deduct_type = models.CharField(max_length=3, choices=DEDUCT_TYPE_CHOICES)
     fixed_amount = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return "{} - {} Rs".format(self.party.get_display_text, self.balance)
@@ -64,13 +68,17 @@ class Wallet(models.Model):
         self.balance -= amount
         self.save()
 
+    def get_part_deduct_amount(self, amount):
+        return min(amount//3, self.balance)
+
     def get_payable_amount(self, amount):
         if self.deduct_type == "FXD":
-            return self.fixed_amount if self.fixed_amount <= amount else amount
+            payable_amount = min(self.fixed_amount, self.balance, amount)
         elif self.deduct_type == "FD":
-            return amount if self.balance > amount else self.balance
+            payable_amount = min(amount, self.balance)
         else:
-            return amount//3 if self.balance > amount//3 else self.balance
+            payable_amount = self.get_part_deduct_amount(amount)
+        return payable_amount, amount - payable_amount
 
 
 class WalletAdvance(models.Model):

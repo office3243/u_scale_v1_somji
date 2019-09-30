@@ -27,7 +27,7 @@ def challan_entries(request, challan_no):
 @login_required
 def entries_done(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no)
-    challan.is_entry_done = True
+    challan.status = "ED"
     challan.save()
     return redirect("challans:assign_rates", {"challan_no": challan.challan_no})
 

@@ -94,7 +94,8 @@ def challan_no_generator():
 
 class Challan(models.Model):
 
-    is_payed = models.BooleanField(default=False)
+    STATUS_CHOICES = (("CR", "Created"), ("ED", "Entries Done"), ("RD", "Reports Done"),
+                      ("PB", "Published"), ("PD", "Payment Done"))
 
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     challan_no = models.CharField(max_length=32, unique=True, default=challan_no_generator)
@@ -103,13 +104,11 @@ class Challan(models.Model):
     extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
 
-    is_entry_done = models.BooleanField(default=False)
-    is_published = models.BooleanField(default=False)
+    status = models.CharField(max_length=2, default="CR")
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
 
     extra_info = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
-    published_on = models.DateTimeField(blank=True, null=True)
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -156,6 +155,7 @@ def assign_weights_amount(sender, instance, *args, **kwargs):
     weights_amount = instance.calculate_weights_amount
     if instance.weights_amount != weights_amount:
         instance.weights_amount = weights_amount
+        instance.total_amount = weights_amount + instance.extra_charges
         instance.save()
     total_amount = instance.weights_amount + instance.extra_charges
     if instance.total_amount != total_amount:

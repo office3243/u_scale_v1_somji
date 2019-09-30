@@ -12,7 +12,7 @@
         </div>
         <div class="container" id="challanDetails">
 
-            <table class="table table-bordered bg-primary text-white">
+            <table class="table table-bordered">
                 <tbody>
                     <tr>
                         <th>Party Code</th>
@@ -29,15 +29,15 @@
                     <tr>
                         <th>Total Amount</th>
                         <td>{{ challan.total_amount }}</td>
+                        <th>Party Balance</th>
+                        <td>{% if wallet %}{{ wallet.balance }}{% else %}-{% endif %}</td>
                     </tr>
-                    {% if wallet %}
-                        <tr>
-                            <th>Party Balance</th>
-                            <td>{{ wallet.balance }}</td>
-                            <th>Wallet Deduct Amount</th>
-                            <td>{{ wallet_payable_amount }}</td>
-                        </tr>
-                    {% endif %}
+                    <tr>
+                        <th>Wallet Deduct Amount</th>
+                        <td id="wallet_deduct_amount">-</td>
+                        <th>Non Wallet Amount</th>
+                        <td id="non_wallet_amount">-</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -52,8 +52,8 @@
                 <div class="form-group payment_mode_section">
                     <label for="payment_mode">1 - Payment Mode</label>
                     <select name="payment_mode" id="payment_mode" class="form-control">
-                        <option value="DP">Direct Payment</option>
-                        <option value="AL">Account Less Payment</option>
+                        <option id="direct_payment" value="DP">Direct Payment</option>
+                        <option id="ac_less_payment" value="AL">Account Less Payment</option>
                     </select>
                 </div>
                 <hr>
@@ -63,15 +63,17 @@
                         <input name="ac_less_amount" class="form-control" id="ac_less_amount" type="number">
                     </div>
                     <div class="form-group col-lg-6">
-                        <label for="ac_less_deduct_type">Select Deduct Type</label>
-                        <select id="ac_less_deduct_type" name="ac_less_deduct_type" class="form-control ac_less_deduct_type">
-                            <option id="full_deduct" type="radio" value="FD">Full Deduct</option>
-                            <option id="part_deduct" type="radio" value="PD">Part Deduct</option>
-                        </select>
+{#                        <label for="ac_less_deduct_type">Select Deduct Type</label>#}
+{#                        <select id="ac_less_deduct_type" name="ac_less_deduct_type" class="form-control ac_less_deduct_type">#}
+{#                            <option id="full_deduct" type="radio" value="FD">Full Deduct</option>#}
+{#                            <option id="part_deduct" type="radio" value="PD">Part Deduct</option>#}
+{#                        </select>#}
+                        <div class="mt-4 float-right">
+                            <button type="button" class="btn btn-primary"><span id="wallet_deduct_type">-</span></button>
+                        </div>
                     </div>
-
+                    <hr>
                 </div>
-                <hr>
                 <div class="non_ac_less_section">
                     <div class="cash_section">
                         <span>3 - Cash Section</span>
@@ -112,8 +114,7 @@
                     </div>
                     <hr>
                 </div>
-
-                <button class="btn btn-primary btn-lg float-right" type="submit">Done</button>
+                <button id="submit_btn" class="btn btn-danger disabled btn-lg float-right" type="submit">Done</button>
                 <br>
 
             </form>
@@ -125,8 +126,30 @@
     <script type="text/javascript">
         let total_amount = {{ challan.total_amount }};
         let total_pay = 0.00;
-        let wallet_payable_amount = {{ wallet_payable_amount }};
-        let wallet_deduct_type = "{{ wallet.deduct_type }}";
+        let wallet_pay = false;
+        let wallet_payable_amount = 0;
+        let non_wallet_amount = 0;
+        {% if wallet %}
+            wallet_pay = true;
+            wallet_payable_amount = {{ wallet_payable_amount }};
+            let wallet_deduct_type = "{{ wallet.deduct_type }}";
+            non_wallet_amount = {{ non_wallet_amount }};
+            let only_wallet_pay = false;
+            if (non_wallet_amount < 0.1){
+                only_wallet_pay = true;
+            }
+        {% else %}
+            non_wallet_amount = {{ challan.total_amount }};
+        {% endif %}
+
+        function allow_submit(b){
+            if (b){
+                $("#submit_btn").removeClass("disabled btn-danger").addClass("btn-success");
+            }
+            else {
+                $("#submit_btn").removeClass("btn-success").addClass("disabled btn-danger");
+            }
+        }
 
         $("#is_cash").on("change", function () {
            if ($(this).prop("checked") === false){
@@ -146,18 +169,6 @@
            }
         });
 
-        $("#ac_less_deduct_type").on("change", function () {
-            if ($(this).val() === "FD"){
-                $(".non_ac_less_section").hide();
-                $("#ac_less_amount").val(wallet_payable_amount);
-                $("#ac_less_amount").addClass("disabled bg-light");
-            }
-            else {
-                $(".non_ac_less_section").show();
-                $("#ac_less_amount").removeClass("disabled bg-light");
-            }
-
-        });
         $("#payment_mode").on("change", function () {
             if ($(this).val() === "DP"){
                 $(".ac_less_section").hide();
@@ -168,33 +179,42 @@
 
         });
 
-        function assign_pay_results(){
-            $("#total_amount").text(total_amount);
-            $("#total_pay").text(total_pay);
-        }
-
         function assign_ac_less_deduct_type(){
             if (total_amount > wallet_payable_amount || wallet_deduct_type !== "FD"){
                 if (total_amount > wallet_payable_amount){
                   $("#full_deduct").attr("disabled", "disabled").addClass("bg-danger");
                 }
-                $("#ac_less_deduct_type").val("PD");
+                $("#ac_less_deduct_type").val("PD").change();
             }
             else {
-                $("#ac_less_deduct_type").val("FD");
+                $("#ac_less_deduct_type").val("FD").change();
             }
-            $("#ac_less_deduct_type").change();
         }
 
         $(function () {
-            assign_pay_results();
-            {% if wallet_payable_amount %}
-                $("#payment_mode").val("AL");
-                $("#ac_less_amount").val({{ wallet_payable_amount }});
-            {% else %}
-                $("#payment_mode").val("DP");
-            {% endif %}
-            assign_ac_less_deduct_type();
+            // Party is a Wallet Party
+            if (wallet_pay){
+                $("#payment_mode").val("AL").change();
+                $("#wallet_deduct_type").text("{{ wallet.get_deduct_type_display }}");
+                if (only_wallet_pay){
+                    $(".non_ac_less_section").hide();
+                }
+                if (wallet_deduct_type === "FD" || wallet_deduct_type === "FXD"){
+                    $("#ac_less_amount").val(wallet_payable_amount).attr("readonly", "readonly").addClass("bg-light disabled");
+                }
+                else {
+                    $("#ac_less_amount").val(wallet_payable_amount);
+                }
+            }
+            // Party is not a Wallet Party
+            else {
+                $("#payment_mode").val("DP").change();
+                $("#ac_less_payment").attr("disabled", "disabled").addClass("bg-light disabled");
+                $(".ac_less_section").hide();
+            }
+            $("#non_wallet_amount").text(non_wallet_amount);
+            $("#wallet_deduct_amount").text(wallet_payable_amount);
+            {#assign_ac_less_deduct_type();#}
         });
 
 

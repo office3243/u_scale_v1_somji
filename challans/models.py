@@ -55,7 +55,7 @@ class ReportWeight(models.Model):
 
     @property
     def get_stock_weight(self):
-        if self.report_type == "RP":
+        if self.report_type == "RT":
             return self.weight_count
         return 0.00
 
@@ -120,7 +120,7 @@ class Weight(models.Model):
 
     @property
     def calculate_stock_weight(self):
-        return self.calculate_weight_sum + self.get_report_stock_weight
+        return self.calculate_weight_sum - self.get_report_stock_weight
 
     @property
     def get_default_rate(self):

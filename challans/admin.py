@@ -14,7 +14,19 @@ class ChallanAdmin(admin.ModelAdmin):
     readonly_fields = ("created_on", "updated_on")
 
 
-admin.site.register(ReportWeight)
+class WeightAdmin(admin.ModelAdmin):
+
+    list_display = ("material", "total_weight", "stock_weight", "challan")
+    list_filter = ("challan", "material")
+
+
+class ReportWeightAdmin(admin.ModelAdmin):
+
+    list_filter = ("weight__material", "weight__challan", "weight__challan__party")
+    list_display = ("weight", "weight_count", "report_type")
+
+
+admin.site.register(ReportWeight, ReportWeightAdmin)
 admin.site.register(WeightEntry)
-admin.site.register(Weight)
+admin.site.register(Weight, WeightAdmin)
 admin.site.register(Challan, ChallanAdmin)

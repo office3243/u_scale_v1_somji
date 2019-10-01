@@ -12,5 +12,7 @@ urlpatterns = [
     url(r"^materials/", include('materials.urls', namespace="materials")),
     url(r"^rates/", include('rates.urls', namespace="rates")),
     url(r"^bank_accounts/", include('bank_accounts.urls', namespace="bank_accounts")),
+
     url(r"^loadings/", include('loadings.urls', namespace="loadings")),
+    url(r"^stocks/", include('stocks.urls', namespace="stocks")),
 ]

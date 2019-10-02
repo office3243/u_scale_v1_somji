@@ -17,19 +17,25 @@ def add(request, challan_no):
     total_amount = challan.total_amount
     if request.method == "POST":
         print(request.POST)
-        payment_mode = request.POST['payment_mode']
+        payment_mode = "AL" if wallet else "DP"
         payment = Payment.objects.get_or_create(challan=challan, payment_mode=payment_mode, amount=total_amount)[0]
-        cash_amount = decimal.Decimal(request.POST.get('cash_amount' or 0))
-        account_amount = decimal.Decimal(request.POST.get('account_amount') or 0)
+        cash_amount = decimal.Decimal(request.POST.get('cash_amount') or 0)
+        account_amount_1 = decimal.Decimal(request.POST.get('account_amount') or 0)
+        account_amount_2 = decimal.Decimal(request.POST.get('account_amount_2') or 0)
         ac_less_amount = decimal.Decimal(request.POST.get('ac_less_amount') or 0)
         if cash_amount:
             cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(),
                                                               status="DN")
-        if account_amount:
-            bank_account_id = (request.POST.get('bank_account') or None)
-            bank_account = get_object_or_404(BankAccount, id=bank_account_id, party=party)
-            account_transaction = AccountTransaction.objects.create(payment=payment, amount=account_amount,
-                                                                    bank_account=bank_account)
+        if account_amount_1:
+            bank_account_id_1 = (request.POST.get('bank_account') or None)
+            bank_account_1 = get_object_or_404(BankAccount, id=bank_account_id_1, party=party)
+            account_transaction_1 = AccountTransaction.objects.create(payment=payment, amount=account_amount_1,
+                                                                      bank_account=bank_account_1)
+        if account_amount_2:
+            bank_account_id_2 = (request.POST.get('bank_account') or None)
+            bank_account_2 = get_object_or_404(BankAccount, id=bank_account_id_2, party=party)
+            account_transaction_2 = AccountTransaction.objects.create(payment=payment, amount=account_amount_2,
+                                                                      bank_account=bank_account_2)
         if wallet is not None and ac_less_amount:
             wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
                                                                   amount=ac_less_amount, is_full_amount=False)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import post_save, pre_save
 
 
 class PartyCategory(models.Model):
@@ -65,8 +66,16 @@ class Wallet(models.Model):
         return "{} - {} Rs".format(self.party.get_display_text, self.balance)
 
     def deduct_balance(self, amount):
-        self.balance -= amount
-        self.save()
+        if self.is_active:
+            self.balance -= amount
+            self.save()
+            return self.balance
+
+    def add_balance(self, amount):
+        if self.is_active:
+            self.balance += amount
+            self.save()
+            return self.balance
 
     def get_part_deduct_amount(self, amount):
         return min(amount//3, self.balance)
@@ -97,3 +106,12 @@ class WalletAdvance(models.Model):
 
     def __str__(self):
         return "{} - {} - {}".format(self.wallet.party.get_display_text, self.amount, self.gateway_type)
+
+
+def add_amount_to_wallet(sender, instance, created, *args, **kwargs):
+    if created:
+        instance.add_balance(amount=instance.amount)
+
+
+post_save.connect(add_amount_to_wallet, sender=WalletAdvance)
+

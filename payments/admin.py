@@ -1,8 +1,40 @@
 from django.contrib import admin
 from .models import AccountTransaction, Payment, WalletTransaction, CashTransaction
 
-admin.site.register(Payment)
-admin.site.register(AccountTransaction)
-admin.site.register(CashTransaction)
-admin.site.register(WalletTransaction)
+
+class PaymentAdmin(admin.ModelAdmin):
+
+    list_display = ("challan", "payment_mode", "amount", "payed_amount", "status")
+    list_display_links = ("challan", )
+    list_filter = ("payment_mode", "challan__party", "status")
+
+
+admin.site.register(Payment, PaymentAdmin)
+
+
+class AccountTransactionAdmin(admin.ModelAdmin):
+
+    list_display = ("unique_id", "amount", "bank_account", "status", "payed_on")
+    list_filter = ("payment__challan__party", "status", "payed_on")
+
+
+admin.site.register(AccountTransaction, AccountTransactionAdmin)
+
+
+class CashTransactionAdmin(admin.ModelAdmin):
+
+    list_display = ("amount", "status", "payed_on")
+    list_filter = ("payment__challan__party", "status", "payed_on")
+
+
+admin.site.register(CashTransaction, CashTransactionAdmin)
+
+
+class WalletTransactionAdmin(admin.ModelAdmin):
+
+    list_display = ("amount", )
+    list_filter = ("wallet__deduct_type", "payment__challan__party")
+
+
+admin.site.register(WalletTransaction, WalletTransactionAdmin)
 

@@ -48,16 +48,7 @@
             <form action="{% url "payments:add" challan_no=challan.challan_no %}" method="post">
 
                 {% csrf_token %}
-
-                <div class="form-group payment_mode_section">
-                    <label for="payment_mode">1 - Payment Mode</label>
-                    <select name="payment_mode" id="payment_mode" class="form-control">
-                        <option id="direct_payment" value="DP">Direct Payment</option>
-                        <option id="ac_less_payment" value="AL">Account Less Payment</option>
-                    </select>
-                </div>
-                <hr>
-                <div class="row ac_less_section">
+                <div class="row ac_less_section" style="display: none;">
                     <div class="form-group col-lg-6">
                         <label for="ac_less_amount">2 - Account Less Amount</label>
                         <input name="ac_less_amount" class="form-control" id="ac_less_amount" type="number">
@@ -97,24 +88,47 @@
                             <label class="custom-control-label" for="is_account">Do You Want Account Transaction ?</label>
                         </div>
                         <br>
-                        <div style="margin-left: 20px" class="form-group account_mode_section clearfix">
-                            <label for="account_amount">Account Amount</label>
-                            <input name="account_amount" class="form-control" id="account_amount" type="number">
-                            <br>
-                            <div class="bank_account_section">
-                                <label for="bank_account">Select Bank Account</label>
-                                <select class="form-control" name="bank_account" id="bank_account">
-                                    {% for account in challan.party.get_bank_accounts %}
-                                        <option value="{{ account.id }}">{{ account.get_display_text }}</option>
-                                    {% endfor %}
-                                </select>
-                                <a href="#" class="font-weight-light float-right text-white">Add bank account +</a>
+                        <div style="margin-left: 20px" class="account_mode_section clearfix">
+                            <div id="account_section_1">
+                                <div class="row">
+                                    <div id="account_amount" class="form-group col-lg-6">
+                                        <label for="account_amount">Account Amount</label>
+                                        <input name="account_amount" class="form-control" id="account_amount" type="number">
+                                        <br>
+                                    </div>
+                                    <div class="bank_account_section col-lg-6">
+                                        <label for="bank_account">Select Bank Account</label>
+                                        <select class="form-control" name="bank_account" id="bank_account">
+                                            {% for account in challan.party.get_bank_accounts %}
+                                                <option value="{{ account.id }}">{{ account.get_display_text }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr>
+                                <a href="javascript:secondAccount();">One More Account Transaction ?</a>
+                            </div>
+                            <div id="account_section_2" style="display: none;">
+                                <div class="row">
+                                    <div id="account_amount_2" class="form-group col-lg-6">
+                                        <label for="account_amount_2">Account Amount 2</label>
+                                        <input name="account_amount_2" class="form-control" id="account_amount_2" type="number">
+                                    </div>
+                                    <div class="bank_account_section_2 col-lg-6">
+                                        <label for="bank_account_2">Select Bank Account 2</label>
+                                        <select class="form-control" name="bank_account_2" id="bank_account_2">
+                                            {% for account in challan.party.get_bank_accounts %}
+                                                <option value="{{ account.id }}">{{ account.get_display_text }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <hr>
                 </div>
-                <button id="submit_btn" class="btn btn-danger disabled btn-lg float-right" type="submit">Done</button>
+                <button id="submit_btn" class="btn btn-primary btn-lg float-right" type="submit">Done</button>
                 <br>
 
             </form>
@@ -149,6 +163,10 @@
             else {
                 $("#submit_btn").removeClass("btn-success").addClass("disabled btn-danger");
             }
+        }
+
+        function secondAccount(){
+            $("#account_section_2").show();
         }
 
         $("#is_cash").on("change", function () {
@@ -189,6 +207,10 @@
             else {
                 $("#ac_less_deduct_type").val("FD").change();
             }
+        }
+
+        function submitForm(){
+            let a = 8;
         }
 
         $(function () {

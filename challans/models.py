@@ -100,6 +100,8 @@ class Challan(models.Model):
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     challan_no = models.CharField(max_length=32, unique=True, default=challan_no_generator)
 
+    vehicle_details = models.CharField(max_length=128, blank=True, null=True)
+
     weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)

@@ -107,6 +107,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 SITE_DOMAIN = "127.0.0.1:8000"
 
 BRANCH_ID = "SM"
+BRANCH_AC_PAYMENT_PREFIX = "SMPAC"
 
 
 LOGIN_URL = reverse_lazy("accounts:login")

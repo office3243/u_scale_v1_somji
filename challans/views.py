@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Challan, Weight, WeightEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView, TemplateView, DetailView
+from django.views.generic import CreateView, TemplateView, DetailView, ListView
 from django.urls import reverse_lazy
 from materials.models import Material
 from parties.models import Party
@@ -102,6 +102,7 @@ class ChallanCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("portal:home")
 
     def form_valid(self, form):
+        form.instance.created_by = self.request.user
         challan = form.save()
         return redirect(challan.get_entries_url)
 
@@ -135,3 +136,19 @@ class ChallanDoneView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = "challan_no"
     slug_field = "challan_no"
     template_name = "challans/done.html"
+
+
+class ChallanListView(LoginRequiredMixin, ListView):
+
+    model = Challan
+    template_name = "challans/list.html"
+    context_object_name = "challans"
+
+
+class ChallanDetailView(LoginRequiredMixin, DetailView):
+
+    model = Challan
+    slug_url_kwarg = "challan_no"
+    slug_field = "challan_no"
+    context_object_name = "challan"
+    template_name = "challans/detail.html"

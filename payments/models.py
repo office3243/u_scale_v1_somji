@@ -100,20 +100,16 @@ class Payment(models.Model):
         return "{} - {} ({}) - ".format(self.challan.party.get_display_text, self.amount, self.get_status_display())
 
     @property
-    def get_transactions_sum(self):
-        return sum([
-            (self.accounttransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00)),
-            (self.cashtransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00)),
-            (self.wallettransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00)),
-        ])
+    def calculate_payed_amount(self):
+        return sum([self.get_ac_tr_amount, self.get_cash_tr_amount, self.get_wallet_tr_amount, ])
 
     @property
-    def calculate_payed_amount(self):
-        return sum([
-            self.accounttransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
-            self.cashtransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
-            self.wallettransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
-        ])
+    def calculate_payed_amount_pending(self):
+        return sum([self.get_ac_tr_amount_pending, ])
+
+    @property
+    def calculate_payed_amount_succeed(self):
+        return sum([self.get_ac_tr_amount_succeed, self.get_cash_tr_amount, self.get_wallet_tr_amount, ])
 
     @property
     def get_remaining_amount(self):
@@ -124,9 +120,33 @@ class Payment(models.Model):
         print(self.wallettransaction_set.exists())
         return self.wallettransaction_set.exists()
 
+    @property
+    def get_amount_payed_succeed(self):
+        return self
+
+    @property
+    def get_wallet_tr_amount(self):
+        return self.wallettransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00)
+
+    @property
+    def get_cash_tr_amount(self):
+        return self.cashtransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00)
+
+    @property
+    def get_ac_tr_amount(self):
+        return self.accounttransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00)
+
+    @property
+    def get_ac_tr_amount_succeed(self):
+        return self.accounttransaction_set.filter(status="DN").aggregate(total=Sum("amount"))["total"] or Decimal(0.00)
+
+    @property
+    def get_ac_tr_amount_pending(self):
+        return self.accounttransaction_set.filter(status="PN").aggregate(total=Sum("amount"))["total"] or Decimal(0.00)
+
     def validate_amounts(self):
         """validate all transaction amounts with total"""
-        transactions_sum = self.get_transactions_sum
+        transactions_sum = self.calculate_payed_amount
         if transactions_sum > self.amount:
             raise ValidationError("Paying amount cannot be greater than Actual amount")
 
@@ -160,11 +180,11 @@ def assign_payed_amount(sender, instance, *args, **kwargs):
 def check_payment_status(sender, instance, *args, **kwargs):
     ac_tr_pending = instance.accounttransaction_set.filter(status="PN").exists()
 
-    if (instance.amount != instance.payed_amount or ac_tr_pending) and instance.status == "DN" and instance.challan.is_reports_done:
+    if (instance.amount != instance.payed_amount or ac_tr_pending or not instance.challan.is_reports_done) and instance.status == "DN":
         instance.status = "PN"
         print(5)
         instance.save()
-    elif instance.amount == instance.payed_amount and instance.status == "PN" and not instance.challan.is_reports_done and not ac_tr_pending:
+    elif instance.amount == instance.payed_amount and instance.status == "PN" and instance.challan.is_reports_done and not ac_tr_pending:
         print(6)
         instance.status = "DN"
         instance.save()

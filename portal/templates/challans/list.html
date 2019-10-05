@@ -1,0 +1,43 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Challan List{% endblock %}
+
+{% block content %}
+    <br><br>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h3>Challan List</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+            <thead>
+                <th>No.</th>
+                <th>Challan NO</th>
+                <th>Total Amount</th>
+                <th>Entries Done</th>
+                <th>Reports Done</th>
+                <th>Payed</th>
+                <th>Status</th>
+            </thead>
+            <tbody>
+                {% for challan in challans %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{{ challan.get_absolute_url }}">{{ challan.challan_no }}</a></td>
+                        <td>{{ challan.total_amount }}</td>
+                        <td>{{ challan.is_entries_done }}</td>
+                        <td>{{ challan.is_reports_done }}</td>
+                        <td>{{ challan.is_payed }}</td>
+                        <td>{{ challan.is_done }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

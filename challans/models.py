@@ -8,6 +8,7 @@ from django.db.models.signals import post_save, pre_save, m2m_changed
 import decimal
 from rates.models import RateGroup, MaterialRate
 import math
+from django.contrib.auth.models import User
 
 
 class WeightEntry(models.Model):
@@ -63,7 +64,7 @@ class Weight(models.Model):
 
     @property
     def get_default_rate(self):
-        return 10.00
+        return decimal.Decimal(10.00)
 
     @property
     def calculate_amount(self):
@@ -98,7 +99,7 @@ def assign_changed_fields(sender, instance, *args, **kwargs):
 
 def assign_rate_per_unit(sender, instance, *args, **kwargs):
     if not instance.rate_per_unit:
-        instance.rate_per_unit = instance
+        instance.rate_per_unit = instance.get_default_rate
         instance.save()
 
 
@@ -143,6 +144,8 @@ def challan_no_generator():
 
 class Challan(models.Model):
 
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     challan_no = models.CharField(max_length=32, unique=True, default=challan_no_generator)
     vehicle_details = models.CharField(max_length=128, blank=True, null=True)
@@ -172,6 +175,10 @@ class Challan(models.Model):
             return math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount'])
         else:
             return 0.00
+
+    @property
+    def get_absolute_url(self):
+        return reverse_lazy("challans:detail", kwargs={"challan_no": self.challan_no})
 
     @property
     def get_entries_url(self):

@@ -5,6 +5,9 @@ app_name = "challans"
 
 urlpatterns = [
     url(r'^create/$', views.ChallanCreateView.as_view(), name="create"),
+    url(r"^list/$", views.ChallanListView.as_view(), name="list"),
+    url(r'^detail/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.ChallanDetailView.as_view(), name="detail"),
+
     url(r'^entries/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.challan_entries, name="entries"),
     url(r'^entries/done/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.entries_done, name="entries_done"),
     url(r'^assign/reports/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.assign_reports, name="assign_reports"),

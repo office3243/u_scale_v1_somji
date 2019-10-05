@@ -1,0 +1,68 @@
+{% extends "portal/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Challan {{ challan.challan_no }}{% endblock %}
+
+{% block content %}
+    <br><br>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-black-50 font-weight-bold text-center">Challan Details | {{ challan.challan_no   }}</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th>Party Code</th>
+                            <td>{{ challan.party.get_display_text }}</td>
+                            <th>Challan No</th>
+                            <td>{{ challan.challan_no }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date Time</th>
+                            <td>{{ challan.created_on.date }} - {{ challan.created_on.time }}</td>
+                            <th>Created By</th>
+                            <td>{{ challan.created_by }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Amount</th>
+                            <td>{{ challan.total_amount }}</td>
+                            <th>Amount Payed</th>
+                            <td>{{ challan.total_amount }}</td>
+                        </tr>
+                        <tr>
+                            <th>Amount Payed SC</th>
+                            <td>{{ challan.payment.calculate_payed_amount_succeed }}</td>
+                            <th>Amount On Hold</th>
+                            <td>{{ challan.payment.calculate_payed_amount_pending }}</td>
+                        </tr>
+                        <tr>
+                            <th>Entries Done</th>
+                            <td>{{ challan.is_entries_done }}</td>
+                            <th>Reports Done</th>
+                            <td>
+                                {% if challan.is_reports_done %}
+                                    <i class="fa fa-check text-success"></i>
+                                {% else %}
+                                    <i class="fa fa-times text-danger "></i> <a href="{{ challan.get_assign_reports_url }}">Add</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Payed</th>
+                            <td>{{ challan.is_payed }}</td>
+                            <th>Total Done</th>
+                            <td>{{ challan.is_done }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary btn-sm">Print</button>
+
+    <a href="{% url "portal:home" %}"><button class="btn blue-gradient">Go to home</button></a>
+
+{% endblock %}

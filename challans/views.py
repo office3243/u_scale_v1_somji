@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from materials.models import Material
 from parties.models import Party
 from django.http import JsonResponse
-from .forms import ChallanRawCreateForm, WeightForm
+from .forms import ChallanRawCreateForm, WeightForm, ReportWeightForm
 from django.forms import modelformset_factory, inlineformset_factory
 from django.contrib import messages
 
@@ -27,9 +27,25 @@ def challan_entries(request, challan_no):
 @login_required
 def entries_done(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no)
-    challan.status = "ED"
+    challan.is_entries_done = True
     challan.save()
-    return redirect("challans:assign_rates", {"challan_no": challan.challan_no})
+    return redirect(challan.get_assign_reports_url)
+
+
+@login_required
+def assign_reports(request, challan_no):
+    challan = get_object_or_404(Challan, challan_no=challan_no)
+    ReportWeightFormSet = inlineformset_factory(Challan, Weight, form=ReportWeightForm, extra=0, can_delete=False)
+    if request.method == "POST":
+        formset = ReportWeightFormSet(request.POST, instance=challan)
+        if formset.is_valid():
+            formset.save()
+            challan.refresh_weights()
+            challan.save()
+            return redirect(challan.get_assign_rates_url)
+    formset = ReportWeightFormSet(instance=challan)
+    context = {"challan": challan, "formset": formset}
+    return render(request, "challans/assign_reports.html", context)
 
 
 @login_required
@@ -40,6 +56,8 @@ def assign_rates(request, challan_no):
         formset = WeightFormSet(request.POST, instance=challan)
         if formset.is_valid():
             formset.save()
+            challan.refresh_weights()
+            challan.save()
             return redirect(challan.get_payment_add_url)
     formset = WeightFormSet(instance=challan)
     context = {"challan": challan, "formset": formset}
@@ -90,6 +108,7 @@ class ChallanCreateView(LoginRequiredMixin, CreateView):
 
 @login_required
 def challan_publish(request, challan_no):
+
     challan = get_object_or_404(Challan, challan_no=challan_no)
     if request.method == "POST":
         print(request.POST, request.FILES)

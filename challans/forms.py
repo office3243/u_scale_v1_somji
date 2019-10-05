@@ -14,3 +14,10 @@ class WeightForm(forms.ModelForm):
     class Meta:
         model = Weight
         fields = ("rate_per_unit", )
+
+
+class ReportWeightForm(forms.ModelForm):
+
+    class Meta:
+        model = Weight
+        fields = ("report_weight", )

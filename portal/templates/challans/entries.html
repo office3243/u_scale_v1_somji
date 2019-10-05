@@ -57,18 +57,17 @@
                 </div>
                 <div id="weightForm" class="col-6">
                 <label class="font-weight-bold text-black-50" for="current_material">Current Material</label><br>
-                <button class="btn btn-primary btn-lg" id="current_material" material_id="{{ materials.first.id }}">{{ materials.first.get_display_text }}</button>
+                <button class="btn btn-primary btn-lg" id="current_material" material_id="">-</button>
 
                 <br><br><hr>
                 <form method="post" action="{% url "challans:weight_entry_create" %}">
                     {% csrf_token %}
                     <input name="challan_no" value="{{ challan.challan_no }}" hidden>
-                    <input id="material_input" name="material_id" hidden value="{{ materials.first.id }}">
+                    <input id="material_input" name="material_id" hidden required>
                     <div class="row col-lg-10" style="margin: auto">
                         <div class="float-left col-lg-8 mt-2">
                             <div class="form-group">
-{#                                <label for="weight_input" class="font-weight-bold text-black-50">Enter Weight</label>#}
-                                <input id="weight_input" class="form-control" name="entry_weight" material_id="{{ materials.first.id }}" placeholder="Enter Weight">
+                                <input id="weight_input" class="weight_entry_input form-control" name="entry_weight" material_id="{{ materials.first.id }}" placeholder="Enter Weight">
                             </div>
                         </div>
                         <div class="float-right col-lg-4 mb-5">
@@ -97,7 +96,13 @@
                         </tbody>
                     </table>
                 </div>
-                <a href="{% url "challans:assign_rates" challan_no=challan.challan_no %}"><button class="btn btn-primary btn-block">Entries Done</button></a>
+            </div>
+            <hr>
+
+            <div>
+                <div class="float-right">
+                    <a href="{{ challan.get_entries_done_url }}"><button class="btn btn-primary btn-block">Entries Done</button></a>
+                </div>
             </div>
         {% endif %}
     </div>
@@ -106,7 +111,7 @@
 
         <div class="container">
             <div class="container jumbotron tempForm">
-                <h3 class="text-black-50 text-center font-weight-bold">Final Bill</h3>
+                <h3 class="text-black-50 text-center font-weight-bold">Reports Section</h3>
                 <hr>
                 <table class="table">
                     <thead>
@@ -188,7 +193,7 @@
                                     [
                                         "{{ weight.material.get_display_text }}",
                                         {% for weight_entry in weight.weightentry_set.all %}{{ weight_entry.entry }},{% endfor %}
-                                        {{ weight.report_weight }},
+                                        "{{ weight.get_report_weight_display }}",
                                         {{ weight.total_weight }},
                                     ],
                                 {% endfor %}

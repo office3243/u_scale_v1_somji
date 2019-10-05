@@ -88,10 +88,10 @@ class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
     challan = models.OneToOneField("challans.Challan", on_delete=models.CASCADE)
-    payment_mode = models.CharField(max_length=2, choices=PAYMENT_MODE_CHOICES)
+    payment_mode = models.CharField(max_length=2, choices=PAYMENT_MODE_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=2, choices=PAYMENT_STATUS_CHOICES, default="PN")
     payed_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
-    amount = models.DecimalField(max_digits=9, decimal_places=2)
+    amount = models.DecimalField(max_digits=9, decimal_places=2, null=True, blank=True)
     payed_on = models.DateTimeField(blank=True, null=True)
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
     extra_info = models.TextField(blank=True)
@@ -110,10 +110,19 @@ class Payment(models.Model):
     @property
     def calculate_payed_amount(self):
         return sum([
-            self.accounttransaction_set.filter(status="DN").aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
-            self.cashtransaction_set.filter(status="DN").aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
+            self.accounttransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
+            self.cashtransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
             self.wallettransaction_set.aggregate(total=Sum("amount"))["total"] or Decimal(0.00),
         ])
+
+    @property
+    def get_remaining_amount(self):
+        return self.amount - self.payed_amount
+
+    @property
+    def get_is_wallet_payed(self):
+        print(self.wallettransaction_set.exists())
+        return self.wallettransaction_set.exists()
 
     def validate_amounts(self):
         """validate all transaction amounts with total"""
@@ -126,6 +135,21 @@ class Payment(models.Model):
         self.validate_amounts()
 
 
+def assign_payment_mode(sender, instance, *args, **kwargs):
+    if instance.status == "PN":
+        payment_mode = "AL" if instance.challan.party.wallet_set.filter(is_active=True).exists() else "DP"
+        if instance.payment_mode != payment_mode:
+            instance.payment_mode = payment_mode
+            instance.save()
+
+
+def assign_amount(sender, instance, *args, **kwargs):
+    challan_amount = instance.challan.total_amount
+    if instance.amount != challan_amount:
+        instance.amount = challan_amount
+        instance.save()
+
+
 def assign_payed_amount(sender, instance, *args, **kwargs):
     payed_amount = instance.calculate_payed_amount
     if instance.payed_amount != payed_amount:
@@ -134,13 +158,30 @@ def assign_payed_amount(sender, instance, *args, **kwargs):
 
 
 def check_payment_status(sender, instance, *args, **kwargs):
-    if instance.amount != instance.payed_amount and instance.status == "DN":
+    ac_tr_pending = instance.accounttransaction_set.filter(status="PN").exists()
+
+    if (instance.amount != instance.payed_amount or ac_tr_pending) and instance.status == "DN" and instance.challan.is_reports_done:
         instance.status = "PN"
+        print(5)
         instance.save()
-    elif instance.amount == instance.payed_amount and instance.status == "PN":
+    elif instance.amount == instance.payed_amount and instance.status == "PN" and not instance.challan.is_reports_done and not ac_tr_pending:
+        print(6)
         instance.status = "DN"
         instance.save()
 
 
+def refresh_challan(sender, instance, *args, **kwargs):
+    instance.challan.save()
+
+
+def clean_payment(sender, instance, *agrs, **kwargs):
+    print("Full Clean")
+    instance.full_clean()
+
+
+post_save.connect(assign_payment_mode, sender=Payment)
+post_save.connect(assign_amount, sender=Payment)
+post_save.connect(clean_payment, sender=Payment)
 post_save.connect(assign_payed_amount, sender=Payment)
 post_save.connect(check_payment_status, sender=Payment)
+post_save.connect(refresh_challan, sender=Payment)

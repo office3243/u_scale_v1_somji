@@ -5,6 +5,7 @@ from .models import Payment, AccountTransaction, CashTransaction, WalletTransact
 from django.utils import timezone
 import decimal
 from bank_accounts.models import BankAccount
+from django.contrib import messages
 
 
 @login_required
@@ -15,16 +16,20 @@ def add(request, challan_no):
     party = challan.party
     wallet = party.get_wallet
     total_amount = challan.total_amount
+    payment = Payment.objects.get_or_create(challan=challan)[0]
+    payment.save()
     if request.method == "POST":
         print(request.POST)
-        payment_mode = "AL" if wallet else "DP"
-        payment = Payment.objects.get_or_create(challan=challan, payment_mode=payment_mode, amount=total_amount)[0]
         cash_amount = decimal.Decimal(request.POST.get('cash_amount') or 0)
         account_amount_1 = decimal.Decimal(request.POST.get('account_amount') or 0)
         account_amount_2 = decimal.Decimal(request.POST.get('account_amount_2') or 0)
         ac_less_amount = decimal.Decimal(request.POST.get('ac_less_amount') or 0)
+        total_pay = cash_amount + account_amount_1 + account_amount_2 + ac_less_amount + payment.payed_amount
+        if total_pay > payment.amount:
+            messages.warning(request, "Amount should be less or equal to {}".format(payment.amount))
+            return redirect(challan.get_payment_add_url)
         if cash_amount:
-            cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(),
+                cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(),
                                                               status="DN")
         if account_amount_1:
             bank_account_id_1 = (request.POST.get('bank_account') or None)
@@ -38,12 +43,12 @@ def add(request, challan_no):
                                                                       bank_account=bank_account_2)
         if wallet is not None and ac_less_amount:
             wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
-                                                                  amount=ac_less_amount, is_full_amount=False)
+                                                                  amount=ac_less_amount)
         return redirect(challan.get_done_url)
     else:
-        context = {"challan": challan}
-        if wallet is not None:
+        context = {"challan": challan, "payment": payment}
+        if payment.payment_mode == "AL":
             context['wallet'] = wallet
-            context['wallet_payable_amount'], context['non_wallet_amount'] = wallet.get_payable_amount(total_amount)
+            context['wallet_payable_amount'], context['non_wallet_amount'] = wallet.get_payable_amount(payment.get_remaining_amount)
             print(context)
         return render(request, "payments/add.html", context)

@@ -2,30 +2,27 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, pre_save
-
-
-class PartyCategory(models.Model):
-
-    name = models.CharField(max_length=64)
-    extra_info = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.name
+from django.conf import settings
+from django.urls import reverse_lazy
+from django.core.validators import ValidationError
 
 
 class Party(models.Model):
 
-    party_category = models.ForeignKey(PartyCategory, blank=True, null=True, on_delete=models.SET_NULL)
-    rate_group = models.ForeignKey("rates.RateGroup", on_delete=models.PROTECT)
+    RATE_TYPE_CHOICES = (("GR", "Group Rate"), ("IR", "Individual Rate"))
+
+    rate_type = models.CharField(max_length=2, choices=RATE_TYPE_CHOICES)
+    rate_group = models.ForeignKey("rates.RateGroup", on_delete=models.PROTECT, blank=True, null=True)
 
     name = models.CharField(max_length=128)
-    code = models.CharField(max_length=32)
+    party_code = models.CharField(max_length=32, blank=True)
     address = models.TextField(blank=True)
     phone = models.CharField(max_length=13)
     whatsapp = models.CharField(max_length=13)
     email = models.EmailField(blank=True, null=True)
+    extra_info = models.TextField(blank=True)
 
-    is_wallet_party = models.BooleanField(default=True)
+    is_wallet_party = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -33,7 +30,11 @@ class Party(models.Model):
 
     @property
     def get_display_text(self):
-        return self.name
+        return self.party_code
+
+    @property
+    def get_absolute_url(self):
+        return reverse_lazy("parties:detail", kwargs={"party_code": self.party_code})
 
     @property
     def get_wallet(self):
@@ -46,9 +47,34 @@ class Party(models.Model):
     def get_bank_accounts(self):
         return self.bankaccount_set.filter(is_active=True)
 
+    def clean(self):
+        super().clean()
+        if self.id:
+            if self.rate_type == "GR" and not self.rate_group:
+                raise ValidationError("Rate Group is must for party with Group Rate Type")
+
     class Meta:
         verbose_name = "Party"
         verbose_name_plural = "Parties"
+
+
+def party_code_generator(party):
+    return "{}{}".format(settings.PARTY_CODE_PREFIX, party.id)
+
+
+def assign_party_code(sender, instance, *args, **kwargs):
+    if not instance.party_code:
+        instance.party_code = party_code_generator(instance)
+        instance.save()
+
+
+def create_party_wallet(sender, instance, *args, **kwargs):
+    if instance.is_wallet_party and not hasattr(instance, "wallet"):
+        Wallet.objects.create(party=instance)
+
+
+post_save.connect(assign_party_code, sender=Party)
+post_save.connect(create_party_wallet, sender=Party)
 
 
 class Wallet(models.Model):

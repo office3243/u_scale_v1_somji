@@ -1,0 +1,71 @@
+{% extends "portal/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Party Details | {{ party.party_code }}{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h3>Party Details</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                             <th>Party Code</th>
+                             <td>{{ party.party_code }}</td>
+                         </tr>
+                        <tr>
+                            <th>Name</th>
+                            <td>{{ party.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone</th>
+                            <td>{{ party.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Whatsapp</th>
+                            <td>{{ party.whatsapp }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td>{{ party.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Rate Type</th>
+                            <td>{{ party.get_rate_type_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Wallet</th>
+                            <td>
+                                {% if party.is_wallet_party %}
+                                    <i class="fa fa-check text-success"></i>
+                                {% else %}
+                                    <i class="fa fa-close text-danger"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Last Challan</th>
+                            <td>{{ party.challan_set.last.created_on }}</td>
+                        </tr>
+                        <tr>
+                            <th>Address</th>
+                            <td>{{ party.address }}</td>
+                        </tr>
+                        <tr>
+                            <th>Extra Info</th>
+                            <td>{{ party.extra_info }}</td>
+                        </tr>
+                    </tbody>
+                 </table>
+            </div>
+            <div class="container">
+                <button class="btn btn-light" onclick="goBack();"><i class="fa fa-arrow-left"></i> Go Back</button>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

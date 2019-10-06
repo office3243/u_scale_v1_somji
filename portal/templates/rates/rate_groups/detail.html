@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Rate Group Details | {{ rate_group.name }}{% endblock %}
+
+{% block content %}
+    <br><br>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h3>Rate Group Details</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td>{{ rate_group.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Active Parties</th>
+                            <td>{{ rate_group.get_active_parties.count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Non Active Parties</th>
+                            <td>{{ rate_group.get_non_active_parties.count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Parties</th>
+                            <td>{{ rate_group.party_set.count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Extra Info</th>
+                            <td>{{ rate_group.extra_info }}</td>
+                        </tr>
+                    </tbody>
+                 </table>
+            </div>
+            <div class="container">
+                <button class="btn btn-light" onclick="goBack();"><i class="fa fa-arrow-left"></i> Go Back</button>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

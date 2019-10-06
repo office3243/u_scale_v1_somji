@@ -8,4 +8,7 @@ urlpatterns = [
     url(r"^accounts/", include('accounts.urls', namespace="accounts")),
     url(r"^challans/", include('challans.urls', namespace="challans")),
     url(r"^payments/", include('payments.urls', namespace="payments")),
+    url(r"^parties/", include('parties.urls', namespace="parties")),
+    url(r"^materials/", include('materials.urls', namespace="materials")),
+    url(r"^rates/", include('rates.urls', namespace="rates")),
 ]

@@ -108,7 +108,7 @@ SITE_DOMAIN = "127.0.0.1:8000"
 
 BRANCH_ID = "SM"
 BRANCH_AC_PAYMENT_PREFIX = "SMPAC"
-
+PARTY_CODE_PREFIX = "SMPR"
 
 LOGIN_URL = reverse_lazy("accounts:login")
 LOGIN_REDIRECT_URL = reverse_lazy("portal:home")

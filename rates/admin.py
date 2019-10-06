@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import RateGroup, MaterialRate
+from .models import RateGroup, GroupMaterialRate
 
 
 admin.site.register(RateGroup)
 
-admin.site.register(MaterialRate)
+admin.site.register(GroupMaterialRate)

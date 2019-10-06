@@ -6,7 +6,7 @@ from django.db.models import Sum, Count, Max, Min
 from django.conf import settings
 from django.db.models.signals import post_save, pre_save, m2m_changed
 import decimal
-from rates.models import RateGroup, MaterialRate
+from rates.models import RateGroup, GroupMaterialRate
 import math
 from django.contrib.auth.models import User
 

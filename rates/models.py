@@ -29,6 +29,10 @@ class RateGroup(models.Model):
     def get_absolute_url(self):
         return reverse_lazy("rates:rate_group_detail", kwargs={"id": self.id})
 
+    @property
+    def get_update_url(self):
+        return reverse_lazy("rates:rate_group_update", kwargs={"id": self.id})
+
 
 class GroupMaterialRate(models.Model):
 

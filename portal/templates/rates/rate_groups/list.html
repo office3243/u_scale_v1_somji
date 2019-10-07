@@ -19,7 +19,7 @@
                         <h3 class="m-auto">Rate Groups</h3>
                     </div>
                     <div class="col-lg-3">
-{#                        <a class="float-right" href="{% url "rate_groups:add" %}"><button class="btn btn-primary">Create</button></a>#}
+                        <a class="float-right" href="{% url "rates:rate_group_add" %}"><button class="btn btn-primary">Create</button></a>
                     </div>
                 </div>
             </div>
@@ -41,7 +41,10 @@
                                          <td><a href="{{ rate_group.get_absolute_url }}">{{ rate_group.name }}</a></td>
                                         <td>{{ rate_group.get_active_parties.count }}</td>
                                         <td>{{ rate_group.party_set.count }}</td>
-                                        <td><a href="{{ rate_group.get_absolute_url }}"><i class="fa fa-eye"></i></a></td>
+                                        <td class="m-auto">
+                                            <a class="m-3" href="{{ rate_group.get_absolute_url }}"><i class="fa fa-eye"></i></a>
+                                            <a class="m-3" href="{{ rate_group.get_update_url }}"><i class="fa fa-pen"></i></a>
+                                        </td>
                                      </tr>
                                  {% endfor %}
                              {% else %}

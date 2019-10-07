@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.http import Http404
 from django.urls import reverse_lazy
 from .models import RateGroup, GroupMaterialRate
-from django.views.generic import ListView, DetailView, CreateView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 
@@ -38,3 +38,31 @@ class RateGroupDetailView(LoginRequiredMixin, DetailView):
     #     if party.is_active:
     #         return party
     #     return Http404("Rate Group Is Not Active")
+
+
+class RateGroupAddView(LoginRequiredMixin, CreateView):
+    model = RateGroup
+    template_name = "rates/rate_groups/add.html"
+    fields = ("name", "extra_info")
+    success_url = reverse_lazy('rates:rate_group_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Rate Group Created Successfully")
+        return super().form_valid(form)
+
+
+class RateGroupUpdateView(LoginRequiredMixin, UpdateView):
+    model = RateGroup
+    template_name = "rates/rate_groups/update.html"
+    slug_field = "id"
+    slug_url_kwarg = "id"
+    context_object_name = "rate_group"
+    fields = ("name", "extra_info")
+    success_url = reverse_lazy('rates:rate_group_list')
+
+    # def get_object(self, queryset=None):
+    #     party = super().get_object()
+    #     if party.is_active:
+    #         return party
+    #     return Http404("Rate Group Is Not Active")
+

@@ -8,7 +8,14 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                <h3>Party Details</h3>
+                <div class="row">
+                    <div class="col-lg-9 m-auto">
+                        <h3 class="m-auto">Party List</h3>
+                    </div>
+                    <div class="col-lg-3">
+                        <a class="float-right" href="{% url "challans:create" %}"><button class="btn btn-primary">Create Challan</button></a>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <table class="table">
@@ -38,6 +45,10 @@
                             <td>{{ party.get_rate_type_display }}</td>
                         </tr>
                         <tr>
+                            <th>Rate Group</th>
+                            <td>{{ party.rate_group }}</td>
+                        </tr>
+                        <tr>
                             <th>Wallet</th>
                             <td>
                                 {% if party.is_wallet_party %}
@@ -60,7 +71,10 @@
                             <td>{{ party.extra_info }}</td>
                         </tr>
                     </tbody>
-                 </table>
+                </table>
+                <div class="row">
+                    <a href="{{ party.get_update_url }}" class="m-auto"><button class="btn btn-primary">Update</button></a>
+                </div>
             </div>
             <div class="container">
                 <button class="btn btn-light" onclick="goBack();"><i class="fa fa-arrow-left"></i> Go Back</button>

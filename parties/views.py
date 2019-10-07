@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import Http404
 from django.urls import reverse_lazy
 from .models import Party
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 
@@ -35,6 +35,21 @@ class PartyDetailView(LoginRequiredMixin, DetailView):
     template_name = "parties/detail.html"
     slug_field = "party_code"
     slug_url_kwarg = "party_code"
+
+    def get_object(self, queryset=None):
+        party = super().get_object()
+        if party.is_active:
+            return party
+        return Http404("Party Is Not Active")
+
+
+class PartyUpdateView(LoginRequiredMixin, UpdateView):
+    model = Party
+    template_name = "parties/update.html"
+    fields = ("rate_group", "rate_type")
+    slug_field = "party_code"
+    slug_url_kwarg = "party_code"
+    success_url = reverse_lazy('parties:list')
 
     def get_object(self, queryset=None):
         party = super().get_object()

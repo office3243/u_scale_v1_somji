@@ -53,7 +53,10 @@
                                                 <i class="fa fa-times text-danger"></i>
                                             {% endif %}
                                         </td>
-                                        <td><a href="{{ party.get_absolute_url }}"><i class="fa fa-eye"></i></a></td>
+                                        <td class="m-auto">
+                                            <a class="m-3" href="{{ party.get_absolute_url }}"><i class="fa fa-eye"></i></a>
+                                            <a class="m-3" href="{{ party.get_update_url }}"><i class="fa fa-pen"></i></a>
+                                        </td>
                                      </tr>
                                  {% endfor %}
                              {% else %}

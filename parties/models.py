@@ -41,6 +41,10 @@ class Party(models.Model):
         return reverse_lazy("parties:update", kwargs={"party_code": self.party_code})
 
     @property
+    def get_challan_ad_url(self):
+        return str(reverse_lazy("challans:add")) + "?ptid={}".format(self.id)
+
+    @property
     def get_wallet(self):
         try:
             return Wallet.objects.get(party=self, is_active=True)

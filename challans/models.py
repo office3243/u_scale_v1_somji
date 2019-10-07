@@ -31,6 +31,24 @@ def save_signal_to_parent(sender, instance, *args, **kwargs):
 post_save.connect(save_signal_to_parent, sender=WeightEntry)
 
 
+class ReportWeight(models.Model):
+
+    REPORT_TYPE_CHOICES = (("RP", "Report"), ("RT", "Return"))
+
+    weight = models.ForeignKey("Weight", on_delete=models.CASCADE)
+    weight_count = models.FloatField(validators=[MinValueValidator(0.10), ],)
+    report_type = models.CharField(max_length=2, choices=REPORT_TYPE_CHOICES)
+
+    reported_on = models.DateTimeField(blank=True, null=True)
+    updated_on = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.weight.material.name, self.weight_count, self.get_report_type_display())
+
+
+post_save.connect(save_signal_to_parent, sender=ReportWeight)
+
+
 class Weight(models.Model):
 
     STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
@@ -144,6 +162,8 @@ def challan_no_generator():
 
 class Challan(models.Model):
 
+    STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
+
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
 
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
@@ -160,7 +180,7 @@ class Challan(models.Model):
     is_entries_done = models.BooleanField(default=False)
     is_reports_done = models.BooleanField(default=False)
     is_payed = models.BooleanField(default=False)
-    is_done = models.BooleanField(default=False)
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
 
     def __str__(self):
         return self.party.name
@@ -221,13 +241,13 @@ class Challan(models.Model):
             weight.save()
 
 
-def check_is_done(sender, instance, *args, **kwargs):
+def check_status(sender, instance, *args, **kwargs):
     all_done = all([instance.is_entries_done, instance.is_payed, instance.is_reports_done])
-    if all_done and not instance.is_done:
-        instance.is_done = True
+    if all_done and instance.status == "PN":
+        instance.status = "DN"
         instance.save()
-    if not all_done and instance.is_done:
-        instance.is_done = False
+    if not all_done and instance.status == "DN":
+        instance.status = "PN"
         instance.save()
 
 
@@ -266,4 +286,4 @@ def assign_weights_amount(sender, instance, *args, **kwargs):
 post_save.connect(assign_weights_amount, sender=Challan)
 post_save.connect(check_reports_done, sender=Challan)
 post_save.connect(check_is_payed, sender=Challan)
-post_save.connect(check_is_done, sender=Challan)
+post_save.connect(check_status, sender=Challan)

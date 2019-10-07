@@ -26,8 +26,9 @@
             <span class="alert alert-{{ message.tags }} btn-block" style="margin-bottom: 0!important;">{{ message }}</span>
         {% endfor %}
     {% endif %}
-
-    {% include "portal/header.html" %}
+    {% if user.is_authenticated %}
+        {% include "portal/header.html" %}
+    {% endif %}
 
 
     {% block content %}

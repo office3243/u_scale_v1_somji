@@ -10,6 +10,33 @@ from django.http import JsonResponse
 from .forms import ChallanRawCreateForm, WeightForm, ReportWeightForm
 from django.forms import modelformset_factory, inlineformset_factory
 from django.contrib import messages
+from django.utils import timezone
+import datetime
+from django.db.models import Q
+
+
+class ChallanAddView(LoginRequiredMixin, CreateView):
+
+    model = Challan
+    template_name = "challans/add.html"
+    fields = ("party", "vehicle_details", "extra_info")
+    success_url = reverse_lazy("challans:list")
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        challan = form.save()
+        return redirect(challan.get_entries_url)
+
+
+class ChallanListView(LoginRequiredMixin, ListView):
+
+    model = Challan
+    template_name = "challans/list.html"
+    context_object_name = "challans"
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(Q(status="PN") | Q(created_on__date__gte=datetime.date.today()+datetime.timedelta(days=-30)))
 
 
 @login_required
@@ -94,17 +121,6 @@ def weight_entry_create(request):
         return redirect("portal:home")
 
 
-class ChallanCreateView(LoginRequiredMixin, CreateView):
-
-    model = Challan
-    template_name = "challans/create.html"
-    fields = ("party", )
-    success_url = reverse_lazy("portal:home")
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        challan = form.save()
-        return redirect(challan.get_entries_url)
 
 
 @login_required
@@ -136,13 +152,6 @@ class ChallanDoneView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = "challan_no"
     slug_field = "challan_no"
     template_name = "challans/done.html"
-
-
-class ChallanListView(LoginRequiredMixin, ListView):
-
-    model = Challan
-    template_name = "challans/list.html"
-    context_object_name = "challans"
 
 
 class ChallanDetailView(LoginRequiredMixin, DetailView):

@@ -4,7 +4,7 @@ from . import views
 app_name = "challans"
 
 urlpatterns = [
-    url(r'^create/$', views.ChallanCreateView.as_view(), name="create"),
+    url(r'^add/$', views.ChallanAddView.as_view(), name="add"),
     url(r"^list/$", views.ChallanListView.as_view(), name="list"),
     url(r'^detail/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.ChallanDetailView.as_view(), name="detail"),
 

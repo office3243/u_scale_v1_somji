@@ -13,7 +13,7 @@
                         <h3 class="m-auto">Party List</h3>
                     </div>
                     <div class="col-lg-3">
-                        <a class="float-right" href="{% url "challans:create" %}"><button class="btn btn-primary">Create Challan</button></a>
+                        <a class="float-right" href="{{ party.get_challan_ad_url }}"><button class="btn btn-primary">Create Challan</button></a>
                     </div>
                 </div>
             </div>

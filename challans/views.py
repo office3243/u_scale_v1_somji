@@ -6,7 +6,7 @@ from django.views.generic import CreateView, TemplateView, DetailView, ListView
 from django.urls import reverse_lazy
 from materials.models import Material
 from parties.models import Party
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from .forms import ChallanRawCreateForm, WeightForm, ReportWeightForm
 from django.forms import modelformset_factory, inlineformset_factory
 from django.contrib import messages
@@ -39,16 +39,22 @@ class ChallanListView(LoginRequiredMixin, ListView):
         return qs.filter(Q(status="PN") | Q(created_on__date__gte=datetime.date.today()+datetime.timedelta(days=-30)))
 
 
-@login_required
-def challan_entries(request, challan_no):
-    challan = get_object_or_404(Challan, challan_no=challan_no)
-    if request.method == "POST":
-        pass
-    else:
-        materials = Material.objects.filter(is_active=True)
-        parties = Party.objects.filter(is_active=True)
-        context = {'materials': materials, "parties": parties, "challan": challan}
-        return render(request, "challans/entries.html", context)
+class ChallanEntriesView(LoginRequiredMixin, DetailView):
+    template_name = "challans/entries.html"
+    model = Challan
+    slug_url_kwarg = "challan_no"
+    slug_field = "challan_no"
+
+    def get_object(self, queryset=None):
+        challan = super().get_object()
+        if not challan.is_entries_done:
+            return challan
+        raise Http404("Challan Entries are Done. Cant be updated now!")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context["materials"] = Material.objects.filter(is_active=True)
+        return context  
 
 
 @login_required

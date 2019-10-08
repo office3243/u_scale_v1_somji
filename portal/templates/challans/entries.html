@@ -3,8 +3,11 @@
 
 {% block title %}Add Weight Entries{% endblock %}
 
-{% block content %}
-<style>
+{% block custom_links %}
+    <style>
+        td{
+          {#font-weight: bold!important;#}
+        }
        #tb td{
            max-width: 80px;
        }
@@ -19,31 +22,49 @@
            color: white;
            font-weight: bold;
        }
-</style>
+    </style>
+{% endblock %}
+
+{% block content %}
+
     <div class="container" style="padding: 50px 20px">
 
         <div class="heading" id="heading">
-            <h3 class="text-black-50 font-weight-bold text-center">Add Entries</h3>
+            <h3 class="text-black-50 font-weight-bold text-center">Add Entries | Step 1</h3>
+            <hr>
         </div>
-        <div class="container" id="challanDetails">
 
-            <table class="table table-borderedsd table-primary">
-                <tbody>
-                    <tr>
-                        <th>Party Code</th>
-                        <td>{{ challan.party.get_display_text }}</td>
-                        <th>Challan No</th>
-                        <td>{{ challan.challan_no }}</td>
-                    </tr>
-                    <tr>
-                        <th>Date</th>
-                        <td>{{ challan.created_on.date }}</td>
-                        <th>Time</th>
-                        <td>{{ challan.created_on.time }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <h3 class="float-left m-auto">Challan Details</h3>
+                    </div>
+                    <div class="col-lg-6">
+                        <i class="fa fa-eye-slash mt-2 float-right" id="challan_details_toggle"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" id="challanDetails">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th>Party Code</th>
+                            <td>{{ challan.party.get_display_text }}</td>
+                            <th>Challan No</th>
+                            <td>{{ challan.challan_no }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date</th>
+                            <td>{{ challan.created_on.date }}</td>
+                            <th>Time</th>
+                            <td>{{ challan.created_on.time }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
         <br><hr>
         <div class="text-center">
             <div class="row">
@@ -55,7 +76,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div id="weightForm" class="col-6">
+                <div id="weightForm" class="col-lg-6">
                 <label class="font-weight-bold text-black-50" for="current_material">Current Material</label><br>
                 <button class="btn btn-primary btn-lg" id="current_material" material_id="">-</button>
 
@@ -99,56 +120,40 @@
             </div>
             <hr>
 
-            <div>
-                <div class="float-right">
-                    <a href="{{ challan.get_entries_done_url }}"><button class="btn btn-primary btn-block">Entries Done</button></a>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="m-auto">Submit Entries</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" {{ challan.get_submit_entries_url }}>
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="has_report_weight">Challan Reports</label>
+                            <select class="form-control" id="has_report_weight">
+                                <option value="N">No</option>
+                                <option value="Y">Yes</option>
+                            </select>
+                            <hr>
+                            <div id="report_materials" class="form-group">
+
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                    </form>
                 </div>
             </div>
         {% endif %}
     </div>
 
-    {% if formset %}
-
-        <div class="container">
-            <div class="container jumbotron tempForm">
-                <h3 class="text-black-50 text-center font-weight-bold">Reports Section</h3>
-                <hr>
-                <table class="table">
-                    <thead>
-                        <th>No</th>
-                        <th>Material</th>
-                        <th>Weight</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
-                    </thead>
-                    {% for form in formset %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ form.instance.material }}</td>
-                            <td class="tempWeight" id="tempWeight_{{ forloop.counter }}">{{ form.instance.total_weight }}</td>
-                            <td>
-                                <div class="col-lg-3">
-                                    <input is_focused="false" onfocus="make_focused(this);" type="number" step="0.01" value="{{ form.rate_per_unit.initial }}" formset_order="{{ forloop.counter }}" target_id="{{ form.rate_per_unit.auto_id }}" class="tempInput form-control">
-                                </div>
-                            </td>
-                            <td class="tempAmount" id="tempAmount_{{ forloop.counter }}">{{ form.instance.amount }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
-                <hr>
-                <button class="btn btn-primary" id="formsetSubmitBtn">Submit</button>
-            </div>
-
-            <div class="formset" style="display: none">
-                <form method="post" id="formset" action="{% url "challans:preview_update" challan_no=challan.challan_no %}">
-                    {% csrf_token %}
-                    {{ formset|crispy }}
-                </form>
-            </div>
-        </div>
-    {% endif %}
+{% endblock %}
+{% block custom_script %}
 
     <script>
+
+        $("#challan_details_toggle").on("click", function () {
+            $("#challanDetails").toggle();
+            $(this).toggleClass("fa-eye fa-eye-slash");
+        });
 
         function makeFocused(element){
             element.setAttribute("is_focused", "true");
@@ -193,7 +198,6 @@
                                     [
                                         "{{ weight.material.get_display_text }}",
                                         {% for weight_entry in weight.weightentry_set.all %}{{ weight_entry.entry }},{% endfor %}
-                                        "{{ weight.get_report_weight_display }}",
                                         {{ weight.total_weight }},
                                     ],
                                 {% endfor %}
@@ -209,11 +213,11 @@
                     max_length = weightList[i].length;
                 }
             }
-            for(let j=0,l=2;j<max_length;j++){
+            for(let j=0,l=1;j<max_length;j++){
                let tr = document.createElement("tr");
                let th = document.createElement("th");
                let thStr;
-               if(j<max_length-2){
+               if(j<max_length-1){
                    // for Table Header Vertical
                    if (j===0){
                        thStr = "Materials"
@@ -230,7 +234,7 @@
                         if (j===0){
                             td.classList.add("tableMaterialHead");
                         }
-                        if(j< weightList[i].length-2){
+                        if(j< weightList[i].length-1){
                             txt= document.createTextNode(weightList[i][j]);
                         }else{
                             txt = document.createTextNode("");
@@ -240,10 +244,7 @@
                     }
                 }else{
                    if (j === (max_length-1)){
-                       thStr = "AMOUNT"
-                   }
-                   else if (j === (max_length-2)){
-                       thStr = "REPORT"
+                       thStr = "TOTAL"
                    }
                    let thxt = document.createTextNode(thStr);
                    th.appendChild(thxt);

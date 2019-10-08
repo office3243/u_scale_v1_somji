@@ -20,4 +20,5 @@ class ReportWeightForm(forms.ModelForm):
 
     class Meta:
         model = Weight
-        fields = ("report_weight", )
+        # fields = ("report_weight", )
+        fields = ("id", )

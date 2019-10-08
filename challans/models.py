@@ -34,10 +34,12 @@ post_save.connect(save_signal_to_parent, sender=WeightEntry)
 class ReportWeight(models.Model):
 
     REPORT_TYPE_CHOICES = (("RP", "Report"), ("RT", "Return"))
+    STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
     weight = models.ForeignKey("Weight", on_delete=models.CASCADE)
     weight_count = models.FloatField(validators=[MinValueValidator(0.10), ],)
     report_type = models.CharField(max_length=2, choices=REPORT_TYPE_CHOICES)
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
 
     reported_on = models.DateTimeField(blank=True, null=True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -55,7 +57,6 @@ class Weight(models.Model):
 
     challan = models.ForeignKey("Challan", on_delete=models.CASCADE)
     material = models.ForeignKey("materials.Material", on_delete=models.CASCADE)
-    report_weight = models.FloatField(blank=True, null=True)
     total_weight = models.FloatField(validators=[MinValueValidator(0.00)], default=0.00)
     rate_per_unit = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
@@ -73,12 +74,15 @@ class Weight(models.Model):
     def calculate_total_weight(self):
         """to return sum of all weight entries in relation. if not exists return 0.00"""
         if self.weightentry_set.exists():
-            return self.weightentry_set.aggregate(total_weight=Sum("entry"))['total_weight'] - (self.report_weight or 0.00)
+            return self.weightentry_set.aggregate(total_weight=Sum("entry"))['total_weight'] - self.get_report_weight
         return 0.00
 
     @property
-    def get_report_weight_display(self):
-        return self.report_weight if self.report_weight is not None else "-"
+    def get_report_weight(self):
+        if self.reportweight_set.exists():
+            return self.reportweight_set.first().weight_count
+        else:
+            return 0.0
 
     @property
     def get_default_rate(self):
@@ -96,23 +100,6 @@ class Weight(models.Model):
 
     def refresh_challan(self):
         self.challan.save()
-
-
-def assign_changed_fields(sender, instance, *args, **kwargs):
-    """to assign weight, rate and amount of weight model on each save"""
-    calculated_weight = decimal.Decimal(instance.calculate_total_weight)
-    if instance.total_weight != calculated_weight:
-        instance.total_weight = calculated_weight
-        instance.save()
-    if instance.rate_per_unit == 0.00:
-        calculated_rate = decimal.Decimal(instance.get_default_rate)
-        instance.rate_per_unit = calculated_rate
-        instance.save()
-    calculated_amount = instance.calculate_amount
-    if instance.amount != calculated_amount:
-        instance.amount = calculated_amount
-        instance.save()
-    instance.challan.save()
 
 
 def assign_rate_per_unit(sender, instance, *args, **kwargs):
@@ -136,13 +123,14 @@ def assign_amount(sender, instance, *args, **kwargs):
 
 
 def check_status(sender, instance, *args, **kwargs):
-    print("Weight Check Status")
-    if instance.report_weight is not None and instance.status == "PN":
-        instance.status = "DN"
-        instance.save()
-    elif instance.report_weight is None and instance.status == "DN":
-        instance.status = "PN"
-        instance.save()
+    if instance.reportweight_set.exists():
+        report_done = (instance.reportweight_set.first().status == "DN")
+        if report_done and instance.status == "PN":
+            instance.status = "DN"
+            instance.save()
+        elif not report_done and instance.status == "DN":
+            instance.status = "PN"
+            instance.save()
 
 
 def refresh_challan(sender, instance, *args, **kwargs):

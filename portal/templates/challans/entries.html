@@ -27,7 +27,7 @@
 
 {% block content %}
 
-    <div class="container" style="padding: 50px 20px">
+    <div class="col-lg-8 m-auto" style="padding: 50px 20px">
 
         <div class="heading" id="heading">
             <h3 class="text-black-50 font-weight-bold text-center">Add Entries | Step 1</h3>
@@ -65,59 +65,83 @@
             </div>
         </div>
 
+
         <br><hr>
-        <div class="text-center">
-            <div class="row">
-                <div id="pickMaterial" class="col-lg-6">
-                    <label class="text-black-50 font-weight-bold">Pick Material</label>
-                    <div class="row">
-                        {% for material in materials %}
-                            <button class="btn btn-lg btn-primary mt-selector" id="material_btn_{{ material.id }}" material_id="{{ material.id }}">{{ material.get_display_text }}</button>
-                        {% endfor %}
+        <div class="row text-center">
+            <div id="pickMaterial" class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="m-auto">Pick Material</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row m-auto">
+                            {% for material in materials %}
+                                <button class="btn btn-primary mt-selector" id="material_btn_{{ material.id }}" material_id="{{ material.id }}">{{ material.get_display_text }}</button>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
-                <div id="weightForm" class="col-lg-6">
-                <label class="font-weight-bold text-black-50" for="current_material">Current Material</label><br>
-                <button class="btn btn-primary btn-lg" id="current_material" material_id="">-</button>
-
-                <br><br><hr>
-                <form method="post" action="{% url "challans:weight_entry_create" %}">
-                    {% csrf_token %}
-                    <input name="challan_no" value="{{ challan.challan_no }}" hidden>
-                    <input id="material_input" name="material_id" hidden required>
-                    <div class="row col-lg-10" style="margin: auto">
-                        <div class="float-left col-lg-8 mt-2">
-                            <div class="form-group">
-                                <input id="weight_input" class="weight_entry_input form-control" name="entry_weight" material_id="{{ materials.first.id }}" placeholder="Enter Weight">
-                            </div>
-                        </div>
-                        <div class="float-right col-lg-4 mb-5">
-                            <button type="submit" class="btn btn-primary btn-lg">Save</button>
-                        </div>
-                    </div>
-
-                </form>
-                <span class="font-weight-bold alert-primary alert">
-                    Last Weight Entry :
-                    {% with challan.get_recent_weight_entry as recent_entry%}
-                        {{ recent_entry.weight.material }} - {{ recent_entry.entry }}
-                    {% endwith %}
-                </span>
-
             </div>
+            <div id="weightForm" class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="m-auto">Add Entry</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tr>
+                                <th>Current Material</th>
+                                <td><button class="btn btn-indigo font-weight-bold m-0" id="current_material" material_id="">-</button></td>
+                            </tr>
+                            <tr>
+                                <th>Last Entry</th>
+                                <td>
+                                    {% with challan.get_recent_weight_entry as recent_entry%}
+                                        {{ recent_entry.weight.material }} - {{ recent_entry.entry }}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                        </table>
+                        <hr>
+                        <form method="post" action="{% url "challans:weight_entry_create" %}">
+                            {% csrf_token %}
+                            <input name="challan_no" value="{{ challan.challan_no }}" hidden>
+                            <input id="material_input" name="material_id" hidden required>
+                            <div class="row col-lg-10" style="margin: auto">
+                                <div class="float-left col-lg-8 mt-2">
+                                    <div class="form-group">
+                                        <input id="weight_input" class="weight_entry_input form-control" name="entry_weight" material_id="{{ materials.first.id }}" placeholder="Enter Weight">
+                                    </div>
+                                </div>
+                                <div class="float-right col-lg-4 mb-5">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
+
+
         <hr>
         {% if challan.weight_set.exists %}
-            <div class="entries" style="margin-top:50px">
-                <h3 class="text-center text-black-50 font-weight-bold">Weight Entries</h3>
-                <div class="table-responsive  text-nowrap">
-                    <table class="table table-bordered table-hover">
-                        <tbody id="tb">
-                        </tbody>
-                    </table>
+            <div id="entries">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="m-auto">Weight Entries</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive  text-nowrap">
+                            <table class="table table-bordered table-hover">
+                                <tbody id="tb">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <hr>
 
             <div class="card">
@@ -125,20 +149,17 @@
                     <h3 class="m-auto">Submit Entries</h3>
                 </div>
                 <div class="card-body">
-                    <form method="post" {{ challan.get_submit_entries_url }}>
+                    <form method="post" action="{{ challan.get_entries_submit_url }}">
                         {% csrf_token %}
                         <div class="form-group">
-                            <label for="has_report_weight">Challan Reports</label>
-                            <select class="form-control" id="has_report_weight">
+                            <label for="has_reports">Challan Reports</label>
+                            <select class="form-control" id="has_reports" name="has_reports">
                                 <option value="N">No</option>
                                 <option value="Y">Yes</option>
                             </select>
                             <hr>
-                            <div id="report_materials" class="form-group">
-
-                            </div>
                         </div>
-                        <button class="btn btn-primary" type="submit">Submit</button>
+                        <button class="btn float-right btn-primary" type="submit">Submit</button>
                     </form>
                 </div>
             </div>
@@ -273,12 +294,21 @@
 
         }
 
+        function assignHasReports(){
+            {% if challan.get_challan_has_report %}
+                $("#has_reports").val("Y");
+            {% else %}
+                $("#has_reports").val("N");
+            {% endif %}
+        }
+
         // Onlaod All Functions to be called from here
         $(function () {
             assignLMT();
             {% if challan.weight_set.exists %}
                 assignEntriesTable();
             {% endif %}
+            assignHasReports();
 
         });
 
@@ -290,3 +320,6 @@
 
 
 {% endblock %}
+
+
+

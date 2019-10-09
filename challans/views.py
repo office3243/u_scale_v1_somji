@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Challan, Weight, WeightEntry
+from .models import Challan, Weight, WeightEntry, ReportWeight
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, TemplateView, DetailView, ListView
@@ -58,6 +58,24 @@ class ChallanEntriesView(LoginRequiredMixin, DetailView):
 
 
 @login_required
+def entries_submit(request, challan_no):
+    challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=False)
+    if request.method == "POST":
+        has_reports = (request.POST['has_reports'] == "Y")
+        if not has_reports:
+            challan.is_reports_done = True
+            challan.is_entries_done = True
+            challan.save()
+            return redirect(challan.get_assign_rates_url)
+        else:
+            challan.is_entries_done = True
+            challan.save()
+            return redirect(challan.get_assign_reports_url)
+    else:
+        return redirect(challan.get_entries_url)
+
+
+@login_required
 def entries_done(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no)
     challan.is_entries_done = True
@@ -65,25 +83,46 @@ def entries_done(request, challan_no):
     return redirect(challan.get_assign_reports_url)
 
 
+# @login_required
+# def assign_reports(request, challan_no):
+#     challan = get_object_or_404(Challan, challan_no=challan_no)
+#     ReportWeightFormSet = inlineformset_factory(Challan, Weight, form=ReportWeightForm, extra=0, can_delete=False)
+#     if request.method == "POST":
+#         formset = ReportWeightFormSet(request.POST, instance=challan)
+#         if formset.is_valid():
+#             formset.save()
+#             challan.refresh_weights()
+#             challan.save()
+#             return redirect(challan.get_assign_rates_url)
+#     formset = ReportWeightFormSet(instance=challan)
+#     context = {"challan": challan, "formset": formset}
+#     return render(request, "challans/assign_reports.html", context)
+
+
 @login_required
 def assign_reports(request, challan_no):
-    challan = get_object_or_404(Challan, challan_no=challan_no)
-    ReportWeightFormSet = inlineformset_factory(Challan, Weight, form=ReportWeightForm, extra=0, can_delete=False)
+    challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
     if request.method == "POST":
-        formset = ReportWeightFormSet(request.POST, instance=challan)
-        if formset.is_valid():
-            formset.save()
-            challan.refresh_weights()
-            challan.save()
-            return redirect(challan.get_assign_rates_url)
-    formset = ReportWeightFormSet(instance=challan)
-    context = {"challan": challan, "formset": formset}
-    return render(request, "challans/assign_reports.html", context)
+        print(request.POST)
+        report_inputs = (report_input for report_input in request.POST if "report_input" in report_input)
+        print(report_inputs)
+        for report_input in report_inputs:
+            try:
+                weight_id = report_input.split("__")[-1]
+                report_type = request.POST["report_type__"+weight_id]
+                weight = get_object_or_404(Weight, challan=challan, id=weight_id)
+                report_weight = ReportWeight.objects.get_or_create(weight=weight, weight_count=float(request.POST[report_input]), report_type=report_type)
+            except:
+                pass
+        return redirect(challan.get_assign_rates_url)
+    else:
+        context = {"challan": challan}
+        return render(request, "challans/assign_reports.html", context)
 
 
 @login_required
 def assign_rates(request, challan_no):
-    challan = get_object_or_404(Challan, challan_no=challan_no)
+    challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
     WeightFormSet = inlineformset_factory(Challan, Weight, form=WeightForm, extra=0, can_delete=False)
     if request.method == "POST":
         formset = WeightFormSet(request.POST, instance=challan)

@@ -178,6 +178,14 @@ class Challan(models.Model):
         return self.challan_no
 
     @property
+    def get_challan_has_report(self):
+        return self.weight_set.filter(material__has_report=True).exists()
+
+    @property
+    def get_materials_has_report(self):
+        return self.weight_set.filter(material__has_report=True)
+
+    @property
     def calculate_weights_amount(self):
         if self.weight_set.exists():
             return math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount'])
@@ -197,8 +205,8 @@ class Challan(models.Model):
         return reverse_lazy("challans:assign_reports", kwargs={'challan_no': self.challan_no})
 
     @property
-    def get_entries_done_url(self):
-        return reverse_lazy("challans:entries_done", kwargs={"challan_no": self.challan_no})
+    def get_entries_submit_url(self):
+        return reverse_lazy("challans:entries_submit", kwargs={"challan_no": self.challan_no})
 
     @property
     def get_assign_rates_url(self):

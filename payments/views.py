@@ -15,6 +15,7 @@ def add(request, challan_no):
     challan.save()
     party = challan.party
     wallet = party.get_wallet
+    print(wallet)
     total_amount = challan.total_amount
     payment = Payment.objects.get_or_create(challan=challan)[0]
     payment.save()

@@ -46,9 +46,9 @@ class Party(models.Model):
 
     @property
     def get_wallet(self):
-        try:
-            return Wallet.objects.get(party=self, is_active=True)
-        except:
+        if self.wallet_set.filter(is_active=True).exists():
+            return self.wallet_set.filter(is_active=True).first()
+        else:
             return None
 
     @property

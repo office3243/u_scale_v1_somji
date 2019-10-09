@@ -61,7 +61,7 @@
 
         <br><hr>
         {% if challan.weight_set.exists %}
-            <div id="entries">
+            <div>
                 <div class="card">
                     <div class="card-header">
                         <div class="row">
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" id="entries">
                         <div class="table-responsive  text-nowrap">
                             <table class="table table-bordered table-hover">
                                 <tbody id="tb">

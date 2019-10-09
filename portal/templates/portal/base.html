@@ -9,7 +9,7 @@
     {% block full_title %}<title>{% block title %}{% endblock %} - U Scale</title>{% endblock %}
     <script type="text/javascript" src="{% static "js/jquery-3.4.1.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/main.js" %}"></script>
-{#    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">#}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
     <link href="{% static "css/bootstrap.min.css" %}" rel=  "stylesheet">
     <link href="{% static "css/mdb.min.css" %}" rel="stylesheet">
     <link href="{% static "css/style.css" %}" rel="stylesheet">
@@ -19,7 +19,7 @@
 
 </head>
 
-<body>
+<body style="background: url({% static "img/background_pattern.png" %}) fixed;">
 
     {% if messages %}
         {% for message in messages %}

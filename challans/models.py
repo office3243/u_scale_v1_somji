@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator
 from . import validators
 from django.db.models import Sum, Count, Max, Min
 from django.conf import settings
-from django.db.models.signals import post_save, pre_save, m2m_changed
+from django.db.models.signals import post_save, pre_save, m2m_changed, post_delete
 import decimal
 from rates.models import RateGroup, GroupMaterialRate
 import math
@@ -36,7 +36,7 @@ class ReportWeight(models.Model):
     REPORT_TYPE_CHOICES = (("RP", "Report"), ("RT", "Return"))
     STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
-    weight = models.ForeignKey("Weight", on_delete=models.CASCADE)
+    weight = models.OneToOneField("Weight", on_delete=models.CASCADE)
     weight_count = models.FloatField(validators=[MinValueValidator(0.10), ],)
     report_type = models.CharField(max_length=2, choices=REPORT_TYPE_CHOICES)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
@@ -49,6 +49,7 @@ class ReportWeight(models.Model):
 
 
 post_save.connect(save_signal_to_parent, sender=ReportWeight)
+post_delete.connect(save_signal_to_parent, sender=ReportWeight)
 
 
 class Weight(models.Model):
@@ -79,8 +80,8 @@ class Weight(models.Model):
 
     @property
     def get_report_weight(self):
-        if self.reportweight_set.exists():
-            return self.reportweight_set.first().weight_count
+        if hasattr(self, "reportweight"):
+            return self.reportweight.weight_count
         else:
             return 0.0
 
@@ -122,15 +123,18 @@ def assign_amount(sender, instance, *args, **kwargs):
         instance.save()
 
 
-def check_status(sender, instance, *args, **kwargs):
-    if instance.reportweight_set.exists():
-        report_done = (instance.reportweight_set.first().status == "DN")
+def check_weight_status(sender, instance, *args, **kwargs):
+    if hasattr(instance, "reportweight"):
+        report_done = (instance.reportweight.status == "DN")
         if report_done and instance.status == "PN":
             instance.status = "DN"
             instance.save()
         elif not report_done and instance.status == "DN":
             instance.status = "PN"
             instance.save()
+    elif instance.status == "PN":
+        instance.status = "DN"
+        instance.save()
 
 
 def refresh_challan(sender, instance, *args, **kwargs):
@@ -140,12 +144,8 @@ def refresh_challan(sender, instance, *args, **kwargs):
 post_save.connect(assign_rate_per_unit, sender=Weight)
 post_save.connect(assign_total_weight, sender=Weight)
 post_save.connect(assign_amount, sender=Weight)
-post_save.connect(check_status, sender=Weight)
+post_save.connect(check_weight_status, sender=Weight)
 post_save.connect(refresh_challan, sender=Weight)
-
-
-def challan_no_generator():
-    return "{}-{}".format(settings.BRANCH_ID, Challan.objects.last().id+1)
 
 
 class Challan(models.Model):
@@ -155,7 +155,7 @@ class Challan(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
 
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
-    challan_no = models.CharField(max_length=32, unique=True, default=challan_no_generator)
+    challan_no = models.CharField(max_length=32, blank=True, null=True)
     vehicle_details = models.CharField(max_length=128, blank=True, null=True)
     weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
@@ -172,7 +172,7 @@ class Challan(models.Model):
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
 
     def __str__(self):
-        return self.party.name
+        return self.challan_no
 
     @property
     def get_display_text(self):
@@ -259,6 +259,9 @@ def check_reports_done(sender, instance, *agrs, **kwargs):
 
 def check_is_payed(sender, instance, *agrs, **kwargs):
     if hasattr(instance, "payment"):
+        if instance.payment.amount != instance.total_amount:
+            instance.payment.amount = instance.total_amount
+            instance.save()
         if instance.payment.status == "DN" and not instance.is_payed:
             instance.is_payed = True
             instance.save()
@@ -279,6 +282,19 @@ def assign_weights_amount(sender, instance, *args, **kwargs):
         instance.total_amount = total_amount
         instance.save()
 
+
+def challan_no_generator(challan):
+    return "{}{}".format(settings.CHALLAN_NO_PREFIX, challan.id)
+
+
+def assign_challan_no(sender, instance, *args, **kwargs):
+    challan_no = challan_no_generator(instance)
+    if instance.challan_no != challan_no:
+        instance.challan_no = challan_no
+        instance.save()
+
+
+post_save.connect(assign_challan_no, sender=Challan)
 
 post_save.connect(assign_weights_amount, sender=Challan)
 post_save.connect(check_reports_done, sender=Challan)

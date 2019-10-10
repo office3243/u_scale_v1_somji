@@ -210,3 +210,8 @@ class ChallanDetailView(LoginRequiredMixin, DetailView):
     slug_field = "challan_no"
     context_object_name = "challan"
     template_name = "challans/detail.html"
+
+    def get_object(self, queryset=None):
+        challan = super().get_object()
+        challan.save()
+        return challan

@@ -6,12 +6,16 @@ from django.utils import timezone
 import decimal
 from bank_accounts.models import BankAccount
 from django.contrib import messages
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 @login_required
 def add(request, challan_no):
-
     challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
+    if challan.is_payed:
+        messages.warning(request, "Challan is already paid")
+        return redirect(challan.get_absolute_url)
     if not challan.is_rates_assigned:
         return redirect(challan.get_assign_rates_url)
     challan.save()
@@ -55,3 +59,19 @@ def add(request, challan_no):
             context['wallet_payable_amount'], context['non_wallet_amount'] = wallet.get_payable_amount(payment.get_remaining_amount)
             print(context)
         return render(request, "payments/add.html", context)
+
+
+class PaymentListView(LoginRequiredMixin, ListView):
+
+    template_name = "payments/list.html"
+    model = Payment
+    context_object_name = "payments"
+
+
+class PaymentDetailView(LoginRequiredMixin, DetailView):
+
+    template_name = "payments/detail.html"
+    model = Payment
+    context_object_name = "payment"
+    slug_field = "id"
+    slug_url_kwarg = "id"

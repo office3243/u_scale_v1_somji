@@ -6,6 +6,7 @@ from decimal import Decimal
 from itertools import chain
 from operator import attrgetter
 from django.conf import settings
+from django.urls import reverse_lazy
 
 
 def save_payment(sender, instance, *args, **kwargs):
@@ -16,7 +17,7 @@ class AccountTransaction(models.Model):
 
     STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
-    unique_id = models.CharField(max_length=32, blank=True, null=True)
+    payment_code = models.CharField(max_length=32, blank=True, null=True)
     payment = models.ForeignKey("Payment", on_delete=models.CASCADE)
     bank_account = models.ForeignKey("bank_accounts.BankAccount", on_delete=models.CASCADE, blank=True, null=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
@@ -30,12 +31,18 @@ class AccountTransaction(models.Model):
         return str(self.amount)
 
 
-def assign_unique_id(sender, instance, *args, **kwargs):
-    if not instance.unique_id and instance.status == "DN":
-        instance.unique_id = "{}-{}".format(settings.BRANCH_AC_PAYMENT_PREFIX, AccountTransaction.objects.last().id+1)
+def generate_ac_tr_payment_code(ac_tr):
+    return "{}-{}".format(settings.BRANCH_AC_PAYMENT_PREFIX, ac_tr.id)
 
 
-post_save.connect(assign_unique_id, sender=AccountTransaction)
+def assign_ac_tr_payment_code(sender, instance, *args, **kwargs):
+    payment_code = generate_ac_tr_payment_code(instance)
+    if instance.payment_code != payment_code:
+        instance.payment_code = payment_code
+        instance.save()
+
+
+post_save.connect(assign_ac_tr_payment_code, sender=AccountTransaction)
 post_save.connect(save_payment, sender=AccountTransaction)
 
 
@@ -87,6 +94,8 @@ class Payment(models.Model):
     PAYMENT_MODE_CHOICES = (("DP", "Direct Payment"), ("AL", "Account Less"))
     PAYMENT_STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
+    payment_code = models.CharField(max_length=12, blank=True, null=True)
+
     challan = models.OneToOneField("challans.Challan", on_delete=models.CASCADE)
     payment_mode = models.CharField(max_length=2, choices=PAYMENT_MODE_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=2, choices=PAYMENT_STATUS_CHOICES, default="PN")
@@ -95,6 +104,7 @@ class Payment(models.Model):
     payed_on = models.DateTimeField(blank=True, null=True)
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
     extra_info = models.TextField(blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return "{} - {} ({}) - ".format(self.challan.party.get_display_text, self.amount, self.get_status_display())
@@ -102,6 +112,10 @@ class Payment(models.Model):
     @property
     def calculate_payed_amount(self):
         return sum([self.get_ac_tr_amount, self.get_cash_tr_amount, self.get_wallet_tr_amount, ])
+
+    @property
+    def get_absolute_url(self):
+        return reverse_lazy("payments:detail", kwargs={"id": self.id})
 
     @property
     def calculate_payed_amount_pending(self):
@@ -150,9 +164,9 @@ class Payment(models.Model):
         if transactions_sum > self.amount:
             raise ValidationError("Paying amount cannot be greater than Actual amount")
 
-    def clean(self):
-        super().clean()
-        self.validate_amounts()
+    # def clean(self):
+    #     super().clean()
+    #     self.validate_amounts()
 
 
 def assign_payment_mode(sender, instance, *args, **kwargs):
@@ -199,6 +213,18 @@ def clean_payment(sender, instance, *agrs, **kwargs):
     instance.full_clean()
 
 
+def payment_code_generator(payment):
+    return "{}{}".format(settings.PARTY_CODE_PREFIX, payment.id)
+
+
+def assign_payment_code(sender, instance, *args, **kwargs):
+    payment_code = payment_code_generator(instance)
+    if instance.payment_code != payment_code:
+        instance.payment_code = payment_code
+        instance.save()
+
+
+post_save.connect(assign_payment_code, sender=Payment)
 post_save.connect(assign_payment_mode, sender=Payment)
 post_save.connect(assign_amount, sender=Payment)
 post_save.connect(clean_payment, sender=Payment)

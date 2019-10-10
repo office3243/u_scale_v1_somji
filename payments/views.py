@@ -11,7 +11,9 @@ from django.contrib import messages
 @login_required
 def add(request, challan_no):
 
-    challan = get_object_or_404(Challan, challan_no=challan_no)
+    challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
+    if not challan.is_rates_assigned:
+        return redirect(challan.get_assign_rates_url)
     challan.save()
     party = challan.party
     wallet = party.get_wallet

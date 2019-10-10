@@ -39,19 +39,39 @@
                         </tr>
                         <tr>
                             <th>Entries Done</th>
-                            <td>{{ challan.is_entries_done }}</td>
+                            <td>
+                                {% if challan.is_entries_done %}
+                                    <i class="fa fa-lg text-success fa-check"></i>
+                                {% else %}
+                                    <a href="{{ challan.get_entries_url }}"><button class="btn btn-primary">Goto Entries</button></a>
+                                {% endif %}
+                            </td>
                             <th>Reports Done</th>
                             <td>
                                 {% if challan.is_reports_done %}
-                                    <i class="fa fa-check text-success"></i>
+                                    <i class="fa fa-lg text-success fa-check"></i>
                                 {% else %}
-                                    <i class="fa fa-times text-danger "></i> <a href="{{ challan.get_assign_reports_url }}">Add</a>
+                                    <a href="{{ challan.get_assign_reports_url }}"><button class="btn btn-primary">Goto Reports</button></a>
                                 {% endif %}
                             </td>
                         </tr>
                         <tr>
-                            <th>Payed</th>
-                            <td>{{ challan.is_payed }}</td>
+                            <th>Payment Done</th>
+                            <td>
+                                {% if challan.is_payed %}
+                                    <i class="fa fa-lg text-success fa-check"></i>
+                                {% else %}
+                                    {% if challan.is_entries_done %}
+                                        {% if challan.is_rates_assigned %}
+                                            <a href="{{ challan.get_payment_add_url }}"><button class="btn btn-primary">Goto Payment</button></a>
+                                        {% else %}
+                                            <a href="{{ challan.get_assign_rates_url }}"><button class="btn btn-primary">Goto Rates</button></a>
+                                        {% endif %}
+                                    {% else %}
+                                        Complete Entries First
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                             <th>Total Done</th>
                             <td>{{ challan.status }}</td>
                         </tr>

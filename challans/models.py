@@ -145,7 +145,7 @@ post_save.connect(refresh_challan, sender=Weight)
 
 
 def challan_no_generator():
-    return "{}-{}".format(settings.BRANCH_ID, Challan.objects.count()+1)
+    return "{}-{}".format(settings.BRANCH_ID, Challan.objects.last().id+1)
 
 
 class Challan(models.Model):
@@ -167,6 +167,7 @@ class Challan(models.Model):
 
     is_entries_done = models.BooleanField(default=False)
     is_reports_done = models.BooleanField(default=False)
+    is_rates_assigned = models.BooleanField(default=False)
     is_payed = models.BooleanField(default=False)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
 

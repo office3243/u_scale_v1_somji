@@ -33,6 +33,7 @@ class ChallanListView(LoginRequiredMixin, ListView):
     model = Challan
     template_name = "challans/list.html"
     context_object_name = "challans"
+    ordering = "-id"
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -59,7 +60,7 @@ class ChallanEntriesView(LoginRequiredMixin, DetailView):
 
 @login_required
 def entries_submit(request, challan_no):
-    challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=False)
+    challan = get_object_or_404(Challan, challan_no=challan_no)
     if request.method == "POST":
         has_reports = (request.POST['has_reports'] == "Y")
         if not has_reports:
@@ -123,12 +124,15 @@ def assign_reports(request, challan_no):
 @login_required
 def assign_rates(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
+    if challan.is_rates_assigned:
+        return redirect(challan.get_payment_add_url)
     WeightFormSet = inlineformset_factory(Challan, Weight, form=WeightForm, extra=0, can_delete=False)
     if request.method == "POST":
         formset = WeightFormSet(request.POST, instance=challan)
         if formset.is_valid():
             formset.save()
             challan.refresh_weights()
+            challan.is_rates_assigned = True
             challan.save()
             return redirect(challan.get_payment_add_url)
     formset = WeightFormSet(instance=challan)

@@ -71,8 +71,9 @@ def party_code_generator(party):
 
 
 def assign_party_code(sender, instance, *args, **kwargs):
-    if not instance.party_code:
-        instance.party_code = party_code_generator(instance)
+    party_code = party_code_generator(instance)
+    if instance.party_code != party_code:
+        instance.party_code = party_code
         instance.save()
 
 

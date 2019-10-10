@@ -32,7 +32,7 @@ class AccountTransaction(models.Model):
 
 def assign_unique_id(sender, instance, *args, **kwargs):
     if not instance.unique_id and instance.status == "DN":
-        instance.unique_id = "{}-{}".format(settings.BRANCH_AC_PAYMENT_PREFIX, AccountTransaction.objects.count()+1)
+        instance.unique_id = "{}-{}".format(settings.BRANCH_AC_PAYMENT_PREFIX, AccountTransaction.objects.last().id+1)
 
 
 post_save.connect(assign_unique_id, sender=AccountTransaction)

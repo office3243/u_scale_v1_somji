@@ -20,7 +20,7 @@ class PartyListView(LoginRequiredMixin, ListView):
 class PartyAddView(LoginRequiredMixin, CreateView):
 
     model = Party
-    fields = ("name", "rate_type", "rate_group", "party_code", "address", "phone", "whatsapp", "email", "is_wallet_party", "extra_info")
+    fields = ("name", "rate_type", "rate_group", "address", "phone", "whatsapp", "email", "is_wallet_party", "extra_info")
     template_name = "parties/add.html"
     success_url = reverse_lazy('parties:list')
 

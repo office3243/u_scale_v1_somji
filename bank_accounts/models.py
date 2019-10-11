@@ -13,8 +13,8 @@ class BankAccount(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return "{} - {}".format(self.party.name, self.bank_name)
+        return "{} - {} - {}".format(self.party.name, self.bank_name, self.acc_no[-5:])
 
     @property
     def get_display_text(self):
-        return "{} - {}".format(self.party.get_display_text, self.bank_name)
+        return "{} - {} - {}".format(self.party.get_display_text, self.bank_name, self.acc_no[-5:])

@@ -120,6 +120,7 @@ def assign_reports(request, challan_no):
                 report_weight = ReportWeight.objects.get_or_create(weight=weight)[0]
                 report_weight.weight_count = float(request.POST['report_input__' + weight_id])
                 report_weight.report_type = report_type
+                report_weight.reported_on = timezone.now()
                 report_weight.save()
                 print(report_weight.weight_count)
             except Exception as e:

@@ -16,8 +16,8 @@ class ChallanAdmin(admin.ModelAdmin):
 
 class WeightAdmin(admin.ModelAdmin):
 
-    list_display = ("material", "total_weight", "stock_weight", "challan")
-    list_filter = ("challan", "material")
+    list_display = ("material", "rate_per_unit", "total_weight", "stock_weight", "challan")
+    list_filter = ("challan", "material", "challan__created_on")
 
 
 class ReportWeightAdmin(admin.ModelAdmin):
@@ -26,7 +26,13 @@ class ReportWeightAdmin(admin.ModelAdmin):
     list_display = ("weight", "weight_count", "report_type")
 
 
+class WeightEntryAdmin(admin.ModelAdmin):
+
+    list_display = ("entry", "weight")
+    list_filter = ("weight__material", "weight__challan")
+
+
 admin.site.register(ReportWeight, ReportWeightAdmin)
-admin.site.register(WeightEntry)
+admin.site.register(WeightEntry, WeightEntryAdmin)
 admin.site.register(Weight, WeightAdmin)
 admin.site.register(Challan, ChallanAdmin)

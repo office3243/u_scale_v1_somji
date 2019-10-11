@@ -67,7 +67,7 @@ class MaterialStock(models.Model):
     @property
     def calculate_in_weight(self):
         in_weight = Weight.objects.filter(challan__in=self.get_challans, material=self.material).aggregate(total=Sum("stock_weight"))['total'] or 0.00
-        return in_weight
+        return round(in_weight, 2)
 
     @property
     def check_challan_status(self):
@@ -82,8 +82,7 @@ class MaterialStock(models.Model):
     @property
     def calculate_out_weight(self):
         out_weight = LoadingWeight.objects.filter(loading__in=self.get_loadings, material=self.material).aggregate(total=Sum("weight_count"))['total'] or 0.00
-        print(out_weight)
-        return out_weight
+        return round(out_weight, 2)
 
     @property
     def check_loading_status(self):
@@ -100,7 +99,7 @@ class MaterialStock(models.Model):
 
     @property
     def calculate_closing_weight(self):
-        return self.opening_weight + self.in_weight - self.out_weight
+        return round((self.opening_weight + self.in_weight - self.out_weight), 2)
 
     @property
     def check_status(self):

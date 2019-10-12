@@ -114,13 +114,13 @@
                                     <th>Report Type</th>
                                 </thead>
                                 {% for weight in challan.weight_set.all %}
-                                    <tr id="weight_{{ weight.id }}" style="display: none">
+                                    <tr id="weight_{{ weight.id }}" style="display: {% if weight.reportweight or weight.material.has_report %}{% else %}none{% endif %}">
                                         <td>{{ forloop.counter }}</td>
                                         <td>{{ weight.material }}</td>
                                         <td id="total_weight_{{ weight.id }}">{{ weight.total_weight }}</td>
                                         <td>
                                             <div class="col-lg-3">
-                                                <input id="report_input__{{ weight.id }}" name="report_input__{{ weight.id }}" type="number" step="0.1" class="form-control">
+                                                <input value={{ weight.reportweight.weight_count }} id="report_input__{{ weight.id }}" name="report_input__{{ weight.id }}" type="number" step="0.1" class="form-control">
                                             </div>
                                         </td>
                                         <td>
@@ -168,7 +168,6 @@
                                         {% for weight_entry in weight.weightentry_set.all %}"{{ weight_entry.entry }}",{% endfor %}
                                         "{{ weight.get_report_weight_display }}",
                                         "{{ weight.total_weight }}",
-                                        "{{ weight.amount }}",
                                     ],
                                 {% endfor %}
                             ];
@@ -183,11 +182,11 @@
                     max_length = weightList[i].length;
                 }
             }
-            for(let j=0,l=3;j<max_length;j++){
+            for(let j=0,l=2;j<max_length;j++){
                let tr = document.createElement("tr");
                let th = document.createElement("th");
                let thStr;
-               if(j<max_length-3){
+               if(j<max_length-2){
                    // for Table Header Vertical
                    if (j===0){
                        thStr = "Materials"
@@ -204,7 +203,7 @@
                         if (j===0){
                             td.classList.add("tableMaterialHead");
                         }
-                        if(j< weightList[i].length-3){
+                        if(j< weightList[i].length-2){
                             txt= document.createTextNode(weightList[i][j]);
                         }else{
                             txt = document.createTextNode("");
@@ -214,12 +213,9 @@
                     }
                 }else{
                    if (j === (max_length-1)){
-                       thStr = "AMOUNT"
-                   }
-                   else if (j === (max_length-2)){
                        thStr = "TOTAL"
                    }
-                   else if (j === (max_length-3)){
+                   else if (j === (max_length-2)){
                        thStr = "REPORT"
                    }
                    let thxt = document.createTextNode(thStr);

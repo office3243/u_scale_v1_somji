@@ -90,3 +90,7 @@ class MaterialRateUpdateView(LoginRequiredMixin, UpdateView):
         self.success_url = form.instance.rate_group.get_absolute_url
         messages.success(self.request, "Rate Update Successfully")
         return super().form_valid(form)
+
+    def get(self, request, *args, **kwargs):
+        print(555)
+        return redirect(self.object.rate_group.get_absolute_url)

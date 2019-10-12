@@ -154,8 +154,8 @@
                         <div class="form-group">
                             <label for="has_reports">Challan Reports</label>
                             <select class="form-control" id="has_reports" name="has_reports">
-                                <option value="N">No</option>
-                                <option value="Y">Yes</option>
+                                <option id="has_reports_no" value="N">No</option>
+                                <option id="has_reports_yes" value="Y">Yes</option>
                             </select>
                             <hr>
                         </div>
@@ -297,6 +297,7 @@
         function assignHasReports(){
             {% if challan.get_challan_has_report %}
                 $("#has_reports").val("Y");
+                $("#has_reports_no").addClass("bg-danger").attr("disabled", "disabled");
             {% else %}
                 $("#has_reports").val("N");
             {% endif %}

@@ -87,7 +87,19 @@ class Weight(models.Model):
 
     @property
     def get_default_rate(self):
-        return decimal.Decimal(10.00)
+        if self.challan.party.rate_group:
+            try:
+                return GroupMaterialRate.objects.get(material=self.material, rate_group=self.challan.party.rate_group).amount
+            except:
+                return decimal.Decimal(1)
+        return decimal.Decimal(1)
+
+    @property
+    def get_report_weight_display(self):
+        if hasattr(self, "reportweight"):
+            return self.reportweight.weight_count
+        else:
+            return "-"
 
     @property
     def calculate_amount(self):

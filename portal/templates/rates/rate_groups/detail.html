@@ -62,7 +62,7 @@
                                                             <form method="post" action="{{ m_rate.get_update_url }}" id="m_form_{{ m_rate.id }}" name="m_form_{{ m_rate.id }}">
                                                                 {% csrf_token %}
                                                                 <input name="material" type="hidden" value="{{ m_rate.material.id }}">
-                                                                <input disabled name="amount" style="width: 200px" type="number" value="{{ m_rate.amount }}" class="form-control amount-input" required>
+                                                                <input name="amount" style="width: 200px" type="number" value="{{ m_rate.amount }}" class="form-control amount-input" required>
                                                             </form>
                                                         </div>
                                                     </td>

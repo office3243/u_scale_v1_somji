@@ -43,11 +43,6 @@ def add(request, challan_no):
             bank_account_1 = get_object_or_404(BankAccount, id=bank_account_id_1, party=party)
             account_transaction_1 = AccountTransaction.objects.create(payment=payment, amount=account_amount_1,
                                                                       bank_account=bank_account_1)
-        if account_amount_2:
-            bank_account_id_2 = (request.POST.get('bank_account') or None)
-            bank_account_2 = get_object_or_404(BankAccount, id=bank_account_id_2, party=party)
-            account_transaction_2 = AccountTransaction.objects.create(payment=payment, amount=account_amount_2,
-                                                                      bank_account=bank_account_2)
         if wallet is not None and ac_less_amount:
             wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
                                                                   amount=ac_less_amount)

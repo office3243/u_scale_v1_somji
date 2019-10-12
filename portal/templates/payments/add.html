@@ -119,27 +119,6 @@
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <hr>
-                                                    <a href="javascript:secondAccount();">One More Account Transaction ?</a>
-                                                </div>
-                                                <div id="account_section_2" style="display: none">
-                                                    <div class="clearfix">
-                                                        <i class="fa fa-times text-danger float-right fa-lg" ></i>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div id="account_amount_2" class="form-group col-lg-6">
-                                                            <label for="account_amount_2">Account Amount 2</label>
-                                                            <input name="account_amount_2" class="form-control" id="account_amount_2" type="number">
-                                                        </div>
-                                                        <div class="bank_account_section_2 col-lg-6">
-                                                            <label for="bank_account_2">Select Bank Account 2</label>
-                                                            <select class="form-control" name="bank_account_2" id="bank_account_2">
-                                                                {% for account in challan.party.get_bank_accounts %}
-                                                                    <option value="{{ account.id }}">{{ account.get_display_text }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -255,10 +234,6 @@
             else {
                 $("#submit_btn").removeClass("btn-success").addClass("disabled btn-danger");
             }
-        }
-
-        function secondAccount(){
-            $("#account_section_2").toggle();
         }
 
         $("#is_cash").on("change", function () {

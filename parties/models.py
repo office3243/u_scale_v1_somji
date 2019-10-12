@@ -52,6 +52,10 @@ class Party(models.Model):
             return None
 
     @property
+    def get_bank_account_add_url(self):
+        return str(reverse_lazy("bank_accounts:add")) + "?ptid={}".format(self.id)
+
+    @property
     def get_bank_accounts(self):
         return self.bankaccount_set.filter(is_active=True)
 

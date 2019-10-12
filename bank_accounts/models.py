@@ -5,7 +5,6 @@ class BankAccount(models.Model):
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     acc_no = models.CharField(max_length=32)
     ifsc_code = models.CharField(max_length=32)
-    branch_name = models.CharField(max_length=64)
     bank_name = models.CharField(max_length=64)
 
     is_active = models.BooleanField(default=True)

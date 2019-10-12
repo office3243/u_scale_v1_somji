@@ -77,12 +77,9 @@
                         </tr>
                     </tbody>
                 </table>
+                {% include "portal/goback_btn.html" %}
             </div>
         </div>
     </div>
-
-    <button class="btn btn-primary btn-sm">Print</button>
-
-    <a href="{% url "portal:home" %}"><button class="btn blue-gradient">Go to home</button></a>
 
 {% endblock %}

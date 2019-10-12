@@ -51,7 +51,7 @@ def add(request, challan_no):
         if wallet is not None and ac_less_amount:
             wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
                                                                   amount=ac_less_amount)
-        return redirect(challan.get_done_url)
+        return redirect(challan.get_absolute_url)
     else:
         context = {"challan": challan, "payment": payment}
         if payment.payment_mode == "AL":
@@ -66,6 +66,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
     template_name = "payments/list.html"
     model = Payment
     context_object_name = "payments"
+    ordering = "-id"
 
 
 class PaymentDetailView(LoginRequiredMixin, DetailView):

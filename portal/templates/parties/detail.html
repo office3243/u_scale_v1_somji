@@ -72,12 +72,57 @@
                         </tr>
                     </tbody>
                 </table>
+                <hr>
+                <div class="card border" style="box-shadow: none">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-lg-9">
+                                <h4 class="m-auto">Bank Accounts</h4>
+                            </div>
+                            <div class="col-lg-3">
+                                <a href="{{ party.get_bank_account_add_url }}" class="float-right"><button class="btn btn-primary">Add Account</button></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if party.bankaccount_set.exists %}
+                            <table class="table table-striped">
+                                <thead>
+                                    <th>No</th>
+                                    <th>Acc No</th>
+                                    <th>Bank Name</th>
+                                    <th>IFSC</th>
+                                    <th>Status</th>
+                                </thead>
+                                <tbody>
+                                    {% for bank_account in party.bankaccount_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ bank_account.acc_no }}</td>
+                                            <td>{{ bank_account.bank_name }}</td>
+                                            <td>{{ bank_account.ifsc_code }}</td>
+                                            <td>
+                                                {% if bank_account.is_active %}
+                                                    <i class="fa fa-check text-success"></i>
+                                                {% else %}
+                                                    <i class="fa fa-times text-danger"></i>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <h6>No Bank Accounts</h6>
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="row">
                     <a href="{{ party.get_update_url }}" class="m-auto"><button class="btn btn-primary">Update</button></a>
                 </div>
             </div>
             <div class="container">
-                <button class="btn btn-light" onclick="goBack();"><i class="fa fa-arrow-left"></i> Go Back</button>
+                <button class="btn btn-indigo" onclick="goBack()"><i class="fa fa-arrow-left"></i> Go Back</button>
             </div>
         </div>
     </div>

@@ -11,6 +11,7 @@ class PartyListView(LoginRequiredMixin, ListView):
     model = Party
     context_object_name = "parties"
     template_name = "parties/list.html"
+    ordering = "-id"
 
     def get_queryset(self):
         qs = super().get_queryset()

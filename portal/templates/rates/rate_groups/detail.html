@@ -40,6 +40,47 @@
                             <th>Extra Info</th>
                             <td>{{ rate_group.extra_info }}</td>
                         </tr>
+                        <tr>
+                            <th>Material Rates</th>
+                            <td>
+                                {% if rate_group.groupmaterialrate_set.exists %}
+                                    <table class="table">
+                                        <thead>
+                                            <th>No</th>
+                                            <th>Material</th>
+                                            <th>Rate</th>
+                                            <th>Active</th>
+                                            <th>Actions</th>
+                                        </thead>
+                                        <tbody>
+                                            {% for m_rate in rate_group.groupmaterialrate_set.all %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ m_rate.material.get_display_text }}</td>
+                                                    <td>
+                                                        <div class="">
+                                                            <form method="post" action="{{ m_rate.get_update_url }}" id="m_form_{{ m_rate.id }}" name="m_form_{{ m_rate.id }}">
+                                                                {% csrf_token %}
+                                                                <input name="material" type="hidden" value="{{ m_rate.material.id }}">
+                                                                <input disabled name="amount" style="width: 200px" type="number" value="{{ m_rate.amount }}" class="form-control amount-input" required>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <i class="fa {% if m_rate.is_active %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" onclick="m_form_{{ m_rate.id }}.submit();" class="btn rate_update_btn btn-primary btn-sm m-auto">Update</button>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    No rates found yet
+                                {% endif %}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -90,7 +131,7 @@
             </div>
             <a href="{{ rate_group.get_update_url }}" class="m-auto"><button class="btn btn-primary">Update</button></a>
             <div class="container">
-                <button class="btn btn-light" onclick="goBack();"><i class="fa fa-arrow-left"></i> Go Back</button>
+                <button class="btn btn-indigo" onclick="goBack()" ><i class="fa fa-arrow-left"></i> Go Back</button>
             </div>
         </div>
     </div>
@@ -100,6 +141,9 @@
     <script type="text/javascript" src="{% static "js/addons/datatables.min.js" %}"></script>
     <script src="{% static "js/addons/datatables-select.min.js" %}" rel="stylesheet"></script>
     <script>
+
+
+
         $("#parties_toggle").on("click", function () {
             $("#active_parties").toggle();
             $(this).toggleClass("fa-eye fa-eye-slash");

@@ -1,11 +1,13 @@
-from django.shortcuts import render
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from django.urls import reverse_lazy
 from .models import RateGroup, GroupMaterialRate
 from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.forms.models import inlineformset_factory
+
 
 
 class RatesView(LoginRequiredMixin, TemplateView):
@@ -60,9 +62,31 @@ class RateGroupUpdateView(LoginRequiredMixin, UpdateView):
     fields = ("name", "extra_info")
     success_url = reverse_lazy('rates:rate_group_list')
 
-    # def get_object(self, queryset=None):
-    #     party = super().get_object()
-    #     if party.is_active:
-    #         return party
-    #     return Http404("Rate Group Is Not Active")
 
+# @login_required
+# def material_rates(request, rate_group_id):
+#
+#     rate_group = get_object_or_404(RateGroup, id=id, is_active=True)
+#     MaterialRateFormSet = inlineformset_factory(RateGroup, GroupMaterialRate, form=WeightForm, extra=0, can_delete=False)
+#     if request.method == "POST":
+#         formset = MaterialRateFormSet(request.POST, instance=rate_group)
+#         if formset.is_valid():
+#             formset.save()
+#             return redirect(rate_group.get_absolute_url)
+#     formset = MaterialRateFormSet(instance=rate_group)
+#     context = {"rate_group": rate_group, "formset": formset}
+#     return render(request, "rates/rate_groups/material_rate_update.html", context)
+
+class MaterialRateUpdateView(LoginRequiredMixin, UpdateView):
+
+    model = GroupMaterialRate
+    template_name = "rates/material_rates/update.html"
+    fields = ("material", "amount")
+    success_url = reverse_lazy("rates:rate_group_list")
+    slug_url_kwarg = "id"
+    slug_field = "id"
+
+    def form_valid(self, form):
+        self.success_url = form.instance.rate_group.get_absolute_url
+        messages.success(self.request, "Rate Update Successfully")
+        return super().form_valid(form)

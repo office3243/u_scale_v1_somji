@@ -52,6 +52,10 @@ class GroupMaterialRate(models.Model):
                                               self.rate_group.party_set.count()
                                               )
 
+    @property
+    def get_update_url(self):
+        return reverse_lazy("rates:material_rate_update", kwargs={"id": self.id})
+
     class Meta:
         unique_together = ("material", "rate_group")
         verbose_name = "Grouped Material Rate"

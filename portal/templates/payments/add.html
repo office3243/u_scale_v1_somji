@@ -12,17 +12,17 @@
         </div>
         <div class="">
             <div class="card">
-            <div class="card-header">
-                <div class="row">
-                    <div class="col-lg-6">
-                        <h4 class="float-left m-auto">Challan Details</h4>
-                    </div>
-                    <div class="col-lg-6">
-                        <i class="fa fa-eye-slash mt-2 float-right" id="challan_details_toggle"></i>
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h4 class="float-left m-auto">Challan Details</h4>
+                        </div>
+                        <div class="col-lg-6">
+                            <i class="fa fa-eye-slash mt-2 float-right" id="challan_details_toggle"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="card-body" id="challanDetails">
+                <div class="card-body" id="challanDetails">
                 <table class="table">
                     <tbody>
                         <tr>
@@ -46,44 +46,9 @@
                     </tbody>
                 </table>
             </div>
-            <br><hr>
+            </div>
         </div>
-            <br><hr>
-        </div>
-{#        <div class="">#}
-{#            <div class="card">#}
-{#                <div class="card-header">#}
-{#                    <h4 class="m-auto">Payment Details</h4>#}
-{#                </div>#}
-{#                <div class="card-body" id="challanDetails">#}
-{#                    <table class="table">#}
-{#                        <tbody>#}
-{#                            <tr>#}
-{#                                <th>Total Amount</th>#}
-{#                                <td>{{ payment.amount }}</td>#}
-{#                                <th>Party Balance</th>#}
-{#                                <td>{% if wallet %}{{ wallet.balance }}{% else %}-{% endif %}</td>#}
-{#                            </tr>#}
-{#                            <tr>#}
-{#                                <th>Amount To Pay</th>#}
-{#                                <td>{{ payment.get_remaining_amount }}</td>#}
-{#                                <th>Payed Amount</th>#}
-{#                                <td>{{ payment.payed_amount }}</td>#}
-{#                            </tr>#}
-{#                                <tr>#}
-{#                                    <th>Wallet Deduct Amount</th>#}
-{#                                    <td id="wallet_deduct_amount">-</td>#}
-{#                                    <th>Non Wallet Amount</th>#}
-{#                                    <td id="non_wallet_amount">-</td>#}
-{#                                </tr>#}
-{##}
-{#                        </tbody>#}
-{#                    </table>#}
-{#                </div>#}
-{#            </div>#}
-{#            <br><hr>#}
-{#        </div>#}
-
+        <br><hr>
         <div class="card m-0">
             <div class="card-header">
                 <h3 class="m-auto">Payment</h3>
@@ -127,7 +92,10 @@
                                             <hr>
                                         </div>
                                         <div class="account_section">
+                                            <div class="">
                                             <span>4 - Account Section</span>
+                                                <a target="_blank" class="float-right" href="{{ payment.challan.party.get_bank_account_add_url }}">Add Account + </a>
+                                            </div>
                                             <br><br>
                                             <div style="margin-left: 20px" class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" name="is_account" id="is_account" checked>

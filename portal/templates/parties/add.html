@@ -17,7 +17,7 @@
 
                     <div class="row">
                         <div class="form-group col-lg-6">{{ form.name|as_crispy_field }}</div>
-                        <div class="form-group col-lg-6">{{ form.party_code|as_crispy_field }}</div>
+{#                        <div class="form-group col-lg-6">{{ form.party_code.initial }}</div>#}
                     </div>
                     <div class="row">
                         <div class="form-group col-lg-6">{{ form.phone|as_crispy_field }}</div>
@@ -38,7 +38,7 @@
 
                     <div class="row">
                         <div class="float-left col-lg-6">
-                            <button class="btn btn-light" onclick="goBack();"><i class="fa fa-arrow-left"></i> Go Back</button>
+                            <button class="btn btn-indigo" onclick="goBack()"><i class="fa fa-arrow-left"></i> Go Back</button>
                         </div>
                         <div class="col-lg-6 float-right">
                             <div class="float-right">

@@ -11,4 +11,5 @@ urlpatterns = [
     url(r"^parties/", include('parties.urls', namespace="parties")),
     url(r"^materials/", include('materials.urls', namespace="materials")),
     url(r"^rates/", include('rates.urls', namespace="rates")),
+    url(r"^bank_accounts/", include('bank_accounts.urls', namespace="bank_accounts")),
 ]

@@ -18,7 +18,7 @@ class Party(models.Model):
     party_code = models.CharField(max_length=32, blank=True)
     address = models.TextField(blank=True)
     phone = models.CharField(max_length=13)
-    whatsapp = models.CharField(max_length=13)
+    whatsapp = models.CharField(max_length=13, blank=True)
     email = models.EmailField(blank=True, null=True)
     extra_info = models.TextField(blank=True)
 

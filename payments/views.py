@@ -46,6 +46,7 @@ def add(request, challan_no):
         if wallet is not None and ac_less_amount:
             wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
                                                                   amount=ac_less_amount)
+        payment.save()
         return redirect(challan.get_absolute_url)
     else:
         context = {"challan": challan, "payment": payment}

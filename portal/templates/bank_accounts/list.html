@@ -29,7 +29,9 @@
                          <thead class="thead-light">
                             <th class="th-sm">NO</th>
                             <th class="th-sm">Party</th>
+                            <th class="th-sm">Account Holder</th>
                             <th class="th-sm">Acc No</th>
+                            <th class="th-sm">Branch Name</th>
                             <th class="th-sm">Bank</th>
                             <th class="th-sm">IFSC</th>
                             <th class="th-sm">Status</th>
@@ -40,7 +42,9 @@
                                      <tr>
                                         <td>{{ forloop.counter }}</td>
                                         <td>{{ bank_account.party.get_display_text }}</td>
+                                        <td>{{ bank_account.account_holder }}</td>
                                         <td>{{ bank_account.acc_no }}</td>
+                                        <td>{{ bank_account.branch_name }}</td>
                                         <td>{{ bank_account.bank_name }}</td>
                                         <td>{{ bank_account.ifsc_code }}</td>
                                         <td>

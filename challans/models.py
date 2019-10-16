@@ -48,7 +48,16 @@ class ReportWeight(models.Model):
         return "{} - {} - {}".format(self.weight.material.name, self.weight_count, self.get_report_type_display())
 
 
+def check_status_report_weigth(sender, instance, *args, **kwargs):
+    print("GOT")
+    if not instance.weight.material.has_report and instance.status == "PN":
+        print("OK")
+        instance.status = "DN"
+        instance.save()
+
+
 post_save.connect(save_signal_to_parent, sender=ReportWeight)
+post_save.connect(check_status_report_weigth, sender=ReportWeight)
 post_delete.connect(save_signal_to_parent, sender=ReportWeight)
 
 
@@ -300,10 +309,12 @@ def challan_no_generator(challan):
 
 
 def assign_challan_no(sender, instance, *args, **kwargs):
-    challan_no = challan_no_generator(instance)
-    if instance.challan_no != challan_no:
-        instance.challan_no = challan_no
-        instance.save()
+    if not instance.challan_no:
+        """temporary for testing"""
+        challan_no = challan_no_generator(instance)
+        if instance.challan_no != challan_no:
+            instance.challan_no = challan_no
+            instance.save()
 
 
 post_save.connect(assign_challan_no, sender=Challan)

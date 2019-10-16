@@ -64,6 +64,8 @@
                                 <form action="{% url "payments:add" challan_no=challan.challan_no %}" method="post">
 
                                     {% csrf_token %}
+{#                                    <input name="ac_less_amount" type="number" value="{{ wallet_payable_amount }}">#}
+
                                     <div id="ac_less_section" class="row ac_less_section" style="display: none;">
                                         <div class="form-group col-lg-6">
                                             <label for="ac_less_amount">2 - Account Less Amount</label>

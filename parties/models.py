@@ -82,7 +82,7 @@ def assign_party_code(sender, instance, *args, **kwargs):
 
 
 def create_party_wallet(sender, instance, *args, **kwargs):
-    if instance.is_wallet_party and not hasattr(instance, "wallet"):
+    if instance.is_wallet_party and not instance.wallet_set.filter(is_active=True).exists():
         Wallet.objects.create(party=instance)
 
 

@@ -20,6 +20,7 @@ class AccountTransaction(models.Model):
     payment_code = models.CharField(max_length=32, blank=True, null=True)
     payment = models.ForeignKey("Payment", on_delete=models.CASCADE)
     bank_account = models.ForeignKey("bank_accounts.BankAccount", on_delete=models.CASCADE, blank=True, null=True)
+    payment_party = models.ForeignKey("payment_parties.PaymentParty", on_delete=models.SET_NULL, blank=True, null=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     created_on = models.DateTimeField(auto_now_add=True)
     payed_on = models.DateTimeField(blank=True, null=True)
@@ -42,6 +43,13 @@ def assign_ac_tr_payment_code(sender, instance, *args, **kwargs):
         instance.save()
 
 
+def check_status_ac_tr(sender, instance, *args, **kwargs):
+    if not instance.payment_party and instance.status == "DN":
+        instance.status = "PN"
+        instance.save()
+
+
+post_save.connect(check_status_ac_tr, sender=AccountTransaction)
 post_save.connect(assign_ac_tr_payment_code, sender=AccountTransaction)
 post_save.connect(save_payment, sender=AccountTransaction)
 
@@ -95,7 +103,6 @@ class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
     payment_code = models.CharField(max_length=12, blank=True, null=True)
-
     challan = models.OneToOneField("challans.Challan", on_delete=models.CASCADE)
     payment_mode = models.CharField(max_length=2, choices=PAYMENT_MODE_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=2, choices=PAYMENT_STATUS_CHOICES, default="PN")

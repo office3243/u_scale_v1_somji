@@ -19,7 +19,7 @@ class ChallanAddView(LoginRequiredMixin, CreateView):
 
     model = Challan
     template_name = "challans/add.html"
-    fields = ("party", "vehicle_details", "extra_info")
+    fields = ("party", "vehicle_details", "extra_info", "challan_no")
     success_url = reverse_lazy("challans:list")
 
     def form_valid(self, form):

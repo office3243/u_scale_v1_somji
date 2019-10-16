@@ -102,6 +102,7 @@
                                 <th>Weight</th>
                                 <th>Rate</th>
                                 <th>Amount</th>
+                                <th></th>
                             </thead>
                             {% for form in formset %}
                                 <tr>
@@ -116,6 +117,13 @@
                                     <td class="tempAmount" id="tempAmount_{{ forloop.counter }}">{{ form.instance.amount }}</td>
                                 </tr>
                             {% endfor %}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><span id="temp_total_amount">0</span></td>
+                            </tr>
                         </table>
                         <hr>
                         <button class="btn btn-primary" id="formsetSubmitBtn">Submit</button>
@@ -132,6 +140,15 @@
     {% endif %}
 
     <script>
+
+        function assign_temp_total_amount(){
+            let temp_total_amount = 0;
+            $(".tempAmount").each(function () {
+                temp_total_amount += parseFloat($(this).text());
+                }
+            );
+            $("#temp_total_amount").text(temp_total_amount.toFixed(2));
+        }
 
         $("#challan_details_toggle").on("click", function () {
             $("#challanDetails").toggle();
@@ -152,6 +169,7 @@
             let targetInput = document.getElementById($(this).attr("target_id"));
             targetInput.value = $(this).val();
             $("#tempAmount_" + $(this).attr("formset_order")).text((parseFloat($(this).val()) * parseFloat($("#tempWeight_" + $(this).attr("formset_order")).text())).toFixed(2));
+            assign_temp_total_amount();
         });
 
         $("#formsetSubmitBtn").on("click", function () {
@@ -261,21 +279,9 @@
                document.querySelector('#tb').appendChild(tr);
             }
         }
-
-        function assignLMT() {
-            let url_string = window.location.href;
-            let url = new URL(url_string);
-            let lmtid = url.searchParams.get("lmtid");
-            if (lmtid){
-                $("#material_input").val(lmtid);
-                $("#material_btn_" + lmtid)[0].click();
-            }
-
-        }
-
         // Onlaod All Functions to be called from here
         $(function () {
-            assignLMT();
+            assign_temp_total_amount();
             {% if challan.weight_set.exists %}
                 assignEntriesTable();
             {% endif %}

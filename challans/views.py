@@ -13,17 +13,20 @@ from django.contrib import messages
 from django.utils import timezone
 import datetime
 from django.db.models import Q
+import decimal
 
 
 class ChallanAddView(LoginRequiredMixin, CreateView):
 
     model = Challan
     template_name = "challans/add.html"
-    fields = ("party", "vehicle_details", "extra_info", "challan_no")
+    fields = ("party", "vehicle_details", "extra_info", "challan_no", "extra_charges")
     success_url = reverse_lazy("challans:list")
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        form.cleaned_data['extra_charges'] = decimal.Decimal(form.cleaned_data['extra_charges'])
+        form.instance.extra_charges = decimal.Decimal(form.instance.extra_charges)
         challan = form.save()
         return redirect(challan.get_entries_url)
 
@@ -168,8 +171,6 @@ def weight_entry_create(request):
         return redirect(str(challan.get_entries_url) + "?lmtid={}".format(material_id))
     else:
         return redirect("portal:home")
-
-
 
 
 @login_required

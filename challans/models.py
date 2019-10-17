@@ -178,9 +178,9 @@ class Challan(models.Model):
     party = models.ForeignKey("parties.Party", on_delete=models.CASCADE)
     challan_no = models.CharField(max_length=32, blank=True, null=True)
     vehicle_details = models.CharField(max_length=128, blank=True, null=True)
-    weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
-    extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
-    total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
+    extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
+    total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
     extra_info = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -210,9 +210,9 @@ class Challan(models.Model):
     @property
     def calculate_weights_amount(self):
         if self.weight_set.exists():
-            return math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount'])
+            return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount']))
         else:
-            return 0.00
+            return decimal.Decimal(0.00)
 
     @property
     def get_absolute_url(self):
@@ -291,14 +291,26 @@ def check_is_payed(sender, instance, *agrs, **kwargs):
             instance.save()
 
 
+# def assign_weights_amount(sender, instance, *args, **kwargs):
+#     """to assign all weights amount on each save"""
+#     weights_amount = instance.calculate_weights_amount
+#     if instance.weights_amount != weights_amount:
+#         instance.weights_amount = weights_amount
+#         instance.total_amount = weights_amount - instance.extra_charges
+#         instance.save()
+#     total_amount = instance.weights_amount - instance.extra_charges
+#     if instance.total_amount != total_amount:
+#         instance.total_amount = total_amount
+#         instance.save()
+
 def assign_weights_amount(sender, instance, *args, **kwargs):
     """to assign all weights amount on each save"""
     weights_amount = instance.calculate_weights_amount
     if instance.weights_amount != weights_amount:
         instance.weights_amount = weights_amount
-        instance.total_amount = weights_amount + instance.extra_charges
+        instance.total_amount = weights_amount - instance.extra_charges
         instance.save()
-    total_amount = instance.weights_amount + instance.extra_charges
+    total_amount = instance.weights_amount - instance.extra_charges
     if instance.total_amount != total_amount:
         instance.total_amount = total_amount
         instance.save()

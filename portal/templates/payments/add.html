@@ -65,7 +65,15 @@
 
                                     {% csrf_token %}
 {#                                    <input name="ac_less_amount" type="number" value="{{ wallet_payable_amount }}">#}
-
+{#                                        <div class="cash_section">#}
+{#                                            <span>1 - Extra Charges</span>#}
+{#                                            <br><br>#}
+{#                                            <div style="margin-left: 20px" class="form-group cash_mode_section">#}
+{#                                                <label for="cash_amount">i - Kata Charges</label>#}
+{#                                                <input name="cash_amount" class="form-control" id="extra_charges" type="number">#}
+{#                                            </div>#}
+{#                                            <hr>#}
+{#                                        </div>#}
                                     <div id="ac_less_section" class="row ac_less_section" style="display: none;">
                                         <div class="form-group col-lg-6">
                                             <label for="ac_less_amount">2 - Account Less Amount</label>
@@ -140,6 +148,14 @@
                             </div>
                             <div class="card-body">
                                 <table class="table">
+                                    <tr>
+                                        <th>Weights Amount</th>
+                                        <td>{{ payment.challan.weights_amount }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Extra Charges</th>
+                                        <td>{{ payment.challan.extra_charges }}</td>
+                                    </tr>
                                     <tr>
                                         <th>Total Amount</th>
                                         <td>{{ payment.amount }}</td>

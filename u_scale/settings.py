@@ -16,6 +16,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
 
     'crispy_forms',
 
@@ -115,3 +117,5 @@ CHALLAN_NO_PREFIX = "SMCH"
 
 LOGIN_URL = reverse_lazy("accounts:login")
 LOGIN_REDIRECT_URL = reverse_lazy("portal:home")
+
+SITE_ID = 1

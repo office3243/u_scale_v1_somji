@@ -29,10 +29,10 @@
                             <th>Total Amount</th>
                             <td>{{ challan.total_amount }}</td>
                             <th>Amount Payed</th>
-                            <td>{{ challan.total_amount }}</td>
+                            <td>{{ challan.payment.payed_amount }}</td>
                         </tr>
                         <tr>
-                            <th>Amount Payed SC</th>
+                            <th>Amount Payed Success</th>
                             <td>{{ challan.payment.calculate_payed_amount_succeed }}</td>
                             <th>Amount On Hold</th>
                             <td>{{ challan.payment.calculate_payed_amount_pending }}</td>
@@ -73,7 +73,13 @@
                                 {% endif %}
                             </td>
                             <th>Total Done</th>
-                            <td>{{ challan.status }}</td>
+                            <td>
+                                {% if challan.status == "DN" %}
+                                    <i class="fa fa-lg text-success fa-check"></i>
+                                {% else %}
+                                    <i class="fa fa-lg text-danger fa-times"></i>
+                                {% endif %}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

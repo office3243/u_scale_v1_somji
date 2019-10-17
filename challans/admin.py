@@ -8,6 +8,8 @@ class WeightInline(admin.StackedInline):
 
 
 class ChallanAdmin(admin.ModelAdmin):
+
+    list_display = ("challan_no", "party", "weights_amount", "created_on", "status")
     inlines = [WeightInline, ]
 
 

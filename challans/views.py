@@ -24,6 +24,9 @@ class ChallanAddView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("challans:list")
 
     def form_valid(self, form):
+        if Challan.objects.filter(challan_no=form.instance.challan_no).exists():
+            messages.warning(self.request, "Challan Number already exists!")
+            return super().get(self.request)
         form.instance.created_by = self.request.user
         form.cleaned_data['extra_charges'] = decimal.Decimal(form.cleaned_data['extra_charges'])
         form.instance.extra_charges = decimal.Decimal(form.instance.extra_charges)

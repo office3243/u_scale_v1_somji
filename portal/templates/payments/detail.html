@@ -15,7 +15,7 @@
                     <tbody>
                         <tr>
                             <th>Party Code</th>
-                            <td>{{ payment.challan.party.get_display_text }}</td>
+                            <td>{{ challan.party.name }} - {{ challan.party.get_display_text }}</td>
                             <th>Challan No</th>
                             <td>
                                 <a href="{{ payment.challan.get_absolute_url }}">{{ payment.challan.challan_no }}</a>

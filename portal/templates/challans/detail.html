@@ -15,7 +15,7 @@
                     <tbody>
                         <tr>
                             <th>Party Code</th>
-                            <td>{{ challan.party.get_display_text }}</td>
+                            <td>{{ challan.party.name }} - {{ challan.party.get_display_text }}</td>
                             <th>Challan No</th>
                             <td>{{ challan.challan_no }}</td>
                         </tr>
@@ -26,14 +26,20 @@
                             <td>{{ challan.created_by }}</td>
                         </tr>
                         <tr>
+                            <th>Weights Amount</th>
+                            <td>{{ challan.weights_amount }}</td>
+                            <th>Kata Charges</th>
+                            <td>{{ challan.extra_charges }}</td>
+                        </tr>
+                        <tr>
                             <th>Total Amount</th>
                             <td>{{ challan.total_amount }}</td>
                             <th>Amount Payed</th>
                             <td>{{ challan.payment.payed_amount }}</td>
                         </tr>
                         <tr>
-                            <th>Amount Payed Success</th>
-                            <td>{{ challan.payment.calculate_payed_amount_succeed }}</td>
+                            <th>Remaining Amount</th>
+                            <td>{{ challan.payment.get_remaining_amount }}</td>
                             <th>Amount On Hold</th>
                             <td>{{ challan.payment.calculate_payed_amount_pending }}</td>
                         </tr>

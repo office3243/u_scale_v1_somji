@@ -179,7 +179,8 @@ class Challan(models.Model):
     challan_no = models.PositiveIntegerField(blank=True, null=True)
     vehicle_details = models.CharField(max_length=128, blank=True, null=True)
     weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
-    extra_charges = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
+    extra_charges = models.DecimalField(verbose_name="Kata Charges", max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
+    round_amount = models.DecimalField(max_digits=4, decimal_places=2, default=decimal.Decimal(0.00))
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
     extra_info = models.TextField(blank=True)
@@ -258,6 +259,10 @@ class Challan(models.Model):
         for weight in self.weight_set.all():
             weight.save()
 
+    @property
+    def calculate_total_amount(self):
+        return self.weights_amount + self.extra_charges + self.round_amount
+
 
 def check_status(sender, instance, *args, **kwargs):
     all_done = all([instance.is_entries_done, instance.is_payed, instance.is_reports_done])
@@ -292,13 +297,14 @@ def check_is_payed(sender, instance, *agrs, **kwargs):
 
 
 def assign_weights_amount(sender, instance, *args, **kwargs):
-    """to assign all weights amount on each save"""
     weights_amount = instance.calculate_weights_amount
     if instance.weights_amount != weights_amount:
         instance.weights_amount = weights_amount
-        instance.total_amount = weights_amount - instance.extra_charges
         instance.save()
-    total_amount = instance.weights_amount - instance.extra_charges
+
+
+def assign_total_amount(sender, instance, *args, **kwargs):
+    total_amount = instance.calculate_total_amount
     if instance.total_amount != total_amount:
         instance.total_amount = total_amount
         instance.save()

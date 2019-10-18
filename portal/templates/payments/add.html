@@ -64,16 +64,24 @@
                                 <form action="{% url "payments:add" challan_no=challan.challan_no %}" method="post">
 
                                     {% csrf_token %}
-{#                                    <input name="ac_less_amount" type="number" value="{{ wallet_payable_amount }}">#}
-{#                                        <div class="cash_section">#}
-{#                                            <span>1 - Extra Charges</span>#}
-{#                                            <br><br>#}
-{#                                            <div style="margin-left: 20px" class="form-group cash_mode_section">#}
-{#                                                <label for="cash_amount">i - Kata Charges</label>#}
-{#                                                <input name="cash_amount" class="form-control" id="extra_charges" type="number">#}
-{#                                            </div>#}
-{#                                            <hr>#}
-{#                                        </div>#}
+
+                                    <div class="cash_section">
+                                        <span>1 - General Pays</span>
+                                        <br><br>
+                                        <div class="row">
+                                            <div  class="form-group col-lg-6">
+                                                <label for="extra_charges">Kata Charges</label>
+                                                <input value="{{ payment.challan.extra_charges }}" step="1" name="extra_charges" class="form-control" id="extra_charges" type="number">
+                                            </div>
+                                            <br>
+                                            <div class="form-group col-lg-6">
+                                                <label for="round_amount">Round Amount</label>
+                                                <input value="{{ payment.challan.round_amount }}" step="1" name="round_amount" class="form-control" id="round_amount" type="number">
+                                            </div>
+                                        </div>
+                                        <hr>
+                                    </div>
+
                                     <div id="ac_less_section" class="row ac_less_section" style="display: none;">
                                         <div class="form-group col-lg-6">
                                             <label for="ac_less_amount">2 - Account Less Amount</label>
@@ -155,6 +163,10 @@
                                     <tr>
                                         <th>Extra Charges</th>
                                         <td>{{ payment.challan.extra_charges }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Round Amount</th>
+                                        <td>{{ payment.challan.round_amount }}</td>
                                     </tr>
                                     <tr>
                                         <th>Total Amount</th>

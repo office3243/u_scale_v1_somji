@@ -20,7 +20,7 @@ class ChallanAddView(LoginRequiredMixin, CreateView):
 
     model = Challan
     template_name = "challans/add.html"
-    fields = ("party", "vehicle_details", "extra_info", "challan_no", "extra_charges")
+    fields = ("party", "vehicle_details", "extra_info", "challan_no")
     success_url = reverse_lazy("challans:list")
 
     def form_valid(self, form):
@@ -28,8 +28,6 @@ class ChallanAddView(LoginRequiredMixin, CreateView):
             messages.warning(self.request, "Challan Number already exists!")
             return super().get(self.request)
         form.instance.created_by = self.request.user
-        form.cleaned_data['extra_charges'] = decimal.Decimal(form.cleaned_data['extra_charges'])
-        form.instance.extra_charges = decimal.Decimal(form.instance.extra_charges)
         challan = form.save()
         return redirect(challan.get_entries_url)
 

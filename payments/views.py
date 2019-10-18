@@ -22,22 +22,30 @@ def add(request, challan_no):
     party = challan.party
     wallet = party.get_wallet
     print(wallet)
-    total_amount = challan.total_amount
     payment = Payment.objects.get_or_create(challan=challan)[0]
     payment.save()
     if request.method == "POST":
         print(request.POST)
+        extra_charges = decimal.Decimal(request.POST.get('extra_charges') or 0)
+        round_amount = decimal.Decimal(request.POST.get('round_amount') or 0)
+        print(extra_charges, round_amount)
+        if extra_charges or round_amount:
+            if extra_charges:
+                challan.extra_charges = extra_charges
+            if round_amount:
+                print("round True")
+                challan.round_amount = round_amount
+            challan.save()
+        print(challan.round_amount, challan.extra_charges)
         cash_amount = decimal.Decimal(request.POST.get('cash_amount') or 0)
         account_amount_1 = decimal.Decimal(request.POST.get('account_amount') or 0)
-        account_amount_2 = decimal.Decimal(request.POST.get('account_amount_2') or 0)
         ac_less_amount = decimal.Decimal(request.POST.get('ac_less_amount') or 0)
-        total_pay = cash_amount + account_amount_1 + account_amount_2 + ac_less_amount + payment.payed_amount
+        total_pay = cash_amount + account_amount_1 + ac_less_amount + payment.payed_amount + round_amount - extra_charges
         if total_pay > payment.amount:
             messages.warning(request, "Amount should be less or equal to {}".format(payment.amount))
             return redirect(challan.get_payment_add_url)
         if cash_amount:
-                cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(),
-                                                              status="DN")
+            cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(), status="DN")
         if account_amount_1:
             bank_account_id_1 = (request.POST.get('bank_account') or None)
             bank_account_1 = get_object_or_404(BankAccount, id=bank_account_id_1, party=party)

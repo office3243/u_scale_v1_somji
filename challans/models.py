@@ -37,7 +37,7 @@ class ReportWeight(models.Model):
     STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
     weight = models.OneToOneField("Weight", on_delete=models.CASCADE)
-    weight_count = models.FloatField(validators=[MinValueValidator(0.10), ],)
+    weight_count = models.FloatField(default=0.0)
     report_type = models.CharField(max_length=2, choices=REPORT_TYPE_CHOICES)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
 
@@ -50,9 +50,15 @@ class ReportWeight(models.Model):
 
 def check_status_report_weigth(sender, instance, *args, **kwargs):
     print("GOT")
-    if not instance.weight.material.has_report and instance.status == "PN":
+    if instance.weight_count and instance.status == "PN":
+        instance.status = "DN"
+        instance.save()
+    elif not instance.weight.material.has_report and instance.status == "PN":
         print("OK")
         instance.status = "DN"
+        instance.save()
+    elif not instance.weight_count and instance.status == "DN":
+        instance.status = "PN"
         instance.save()
 
 
@@ -138,7 +144,13 @@ def assign_total_weight(sender, instance, *args, **kwargs):
 
 
 def assign_amount(sender, instance, *args, **kwargs):
-    amount = instance.calculate_amount
+    if hasattr(instance, "reportweight"):
+        if instance.reportweight.status == "PN":
+            amount = instance.calculate_amount * decimal.Decimal(0.9)
+        else:
+            amount = instance.calculate_amount
+    else:
+        amount = instance.calculate_amount
     if instance.amount != amount:
         instance.amount = amount
         instance.save()
@@ -179,7 +191,8 @@ class Challan(models.Model):
     challan_no = models.PositiveIntegerField(blank=True, null=True)
     vehicle_details = models.CharField(max_length=128, blank=True, null=True)
     weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
-    extra_charges = models.DecimalField(verbose_name="Kata Charges", max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
+    extra_charges = models.DecimalField(verbose_name="Kata Charges", max_digits=9, decimal_places=2,
+                                        default=decimal.Decimal(0.00))
     round_amount = models.DecimalField(max_digits=4, decimal_places=2, default=decimal.Decimal(0.00))
     total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
@@ -197,6 +210,10 @@ class Challan(models.Model):
         return str(self.challan_no)
 
     @property
+    def get_paying_amount(self):
+        return self.total_amount
+
+    @property
     def get_display_text(self):
         return self.challan_no
 
@@ -208,12 +225,24 @@ class Challan(models.Model):
     def get_materials_has_report(self):
         return self.weight_set.filter(material__has_report=True)
 
+    # @property
+    # def calculate_weights_amount(self):
+    #     if self.weight_set.exists():
+    #         if hasattr(self, "reportweight"):
+    #             if self.reportweight.status == "PN":
+    #                 return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount'] * 0.9))
+    #         return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount']))
+    #     else:
+    #         return decimal.Decimal(0.00)
+    #
+
     @property
     def calculate_weights_amount(self):
         if self.weight_set.exists():
             return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount']))
         else:
             return decimal.Decimal(0.00)
+
 
     @property
     def get_absolute_url(self):
@@ -261,7 +290,7 @@ class Challan(models.Model):
 
     @property
     def calculate_total_amount(self):
-        return self.weights_amount + self.extra_charges + self.round_amount
+        return self.weights_amount - self.extra_charges + self.round_amount
 
 
 def check_status(sender, instance, *args, **kwargs):
@@ -315,6 +344,7 @@ def challan_no_generator(challan):
 
 
 def assign_challan_no(sender, instance, *args, **kwargs):
+    print(instance.round_amount, instance.extra_charges)
     if not instance.challan_no:
         """temporary for testing"""
         challan_no = challan_no_generator(instance)
@@ -324,8 +354,8 @@ def assign_challan_no(sender, instance, *args, **kwargs):
 
 
 post_save.connect(assign_challan_no, sender=Challan)
-
 post_save.connect(assign_weights_amount, sender=Challan)
+post_save.connect(assign_total_amount, sender=Challan)
 post_save.connect(check_reports_done, sender=Challan)
 post_save.connect(check_is_payed, sender=Challan)
 post_save.connect(check_status, sender=Challan)

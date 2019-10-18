@@ -185,7 +185,7 @@ def assign_payment_mode(sender, instance, *args, **kwargs):
 
 
 def assign_amount(sender, instance, *args, **kwargs):
-    challan_amount = instance.challan.total_amount
+    challan_amount = instance.challan.get_paying_amount
     if instance.amount != challan_amount:
         instance.amount = challan_amount
         instance.save()
@@ -231,7 +231,6 @@ def assign_payment_code(sender, instance, *args, **kwargs):
         instance.save()
 
 
-post_save.connect(assign_payment_code, sender=Payment)
 post_save.connect(assign_payment_mode, sender=Payment)
 post_save.connect(assign_amount, sender=Payment)
 post_save.connect(clean_payment, sender=Payment)

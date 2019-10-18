@@ -151,6 +151,17 @@ def assign_rates(request, challan_no):
     return render(request, "challans/assign_rates.html", context)
 
 
+def recent_entry_delete(request):
+    if request.method == "POST":
+        challan = get_object_or_404(Challan, challan_no=request.POST['challan_no'], is_entries_done=False)
+        recent_entry = challan.get_recent_weight_entry
+        recent_entry.delete()
+        messages.success(request, "Last Entry Delete Successfullyx")
+        return redirect(str(challan.get_entries_url))
+    else:
+        return redirect("portal:home")
+
+
 def weight_entry_create(request):
 
     """

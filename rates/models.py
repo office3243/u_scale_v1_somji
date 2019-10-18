@@ -56,6 +56,11 @@ class GroupMaterialRate(models.Model):
     def get_update_url(self):
         return reverse_lazy("rates:material_rate_update", kwargs={"id": self.id})
 
+    def clean(self):
+        super().clean()
+        if not self.material.check_allowed_rate(self.amount):
+            raise ValidationError("rate must be max {} rs less or more than {}".format(self.material.rate_gap, self.amount))
+
     class Meta:
         unique_together = ("material", "rate_group")
         verbose_name = "Grouped Material Rate"

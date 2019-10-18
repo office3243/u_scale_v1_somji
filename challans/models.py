@@ -10,6 +10,7 @@ from rates.models import RateGroup, GroupMaterialRate
 import math
 from django.contrib.auth.models import User
 from django.db.models import F
+from django.core.exceptions import ValidationError
 
 
 REPORT_PERCENT_LOWER = 10
@@ -177,10 +178,14 @@ class Weight(models.Model):
 
     @property
     def get_recent_entry(self):
-        return self.weightentry_set.last()
+        return self.weightentry_set.last() or None
 
     def refresh_challan(self):
         self.challan.save()
+
+    def clean(self):
+        if not self.material.check_allowed_rate(self.rate_per_unit):
+            raise ValidationError("Rate maust be {} rs less or more than {}".format(self.material.rate_gap, self.material.default_rate))
 
 
 def assign_rate_per_unit(sender, instance, *args, **kwargs):
@@ -248,9 +253,9 @@ class Challan(models.Model):
     vehicle_details = models.CharField(max_length=128, blank=True, null=True)
     weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
     extra_charges = models.DecimalField(verbose_name="Kata Charges", max_digits=9, decimal_places=2,
-                                        default=decimal.Decimal(0.00))
+                                        default=decimal.Decimal(0.00), validators=[MinValueValidator(limit_value=0), MaxValueValidator(limit_value=100)])
     round_amount = models.DecimalField(max_digits=4, decimal_places=2, default=decimal.Decimal(0.00), validators=[MinValueValidator(limit_value=-10), MaxValueValidator(limit_value=10)])
-    total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00), validators=[MinValueValidator(limit_value=0), MaxValueValidator(limit_value=100)])
+    total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00), validators=[MinValueValidator(limit_value=0)])
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
     extra_info = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=True)
@@ -331,7 +336,7 @@ class Challan(models.Model):
 
     @property
     def get_recent_weight_entry(self):
-        return self.weight_set.latest("updated_on").get_recent_entry
+        return self.weight_set.latest("updated_on").get_recent_entry or None
 
     @property
     def get_payable_amount(self):

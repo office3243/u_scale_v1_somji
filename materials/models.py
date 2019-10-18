@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse_lazy
+from django.core.exceptions import ValidationError
 
 
 class Material(models.Model):
@@ -8,6 +9,9 @@ class Material(models.Model):
     material_code = models.CharField(max_length=12)
     extra_info = models.TextField(blank=True)
     has_report = models.BooleanField(default=False)
+
+    default_rate = models.FloatField(default=1.0)
+    rate_gap = models.FloatField(default=1.0)
 
     is_active = models.BooleanField(default=True)
 
@@ -21,3 +25,16 @@ class Material(models.Model):
     @property
     def get_absolute_url(self):
         return reverse_lazy("materials:detail", kwargs={"material_code": self.material_code})
+
+    def check_allowed_rate(self, amount):
+        if amount < self.get_down_rate or amount > self.get_up_rate:
+            return False
+        return True
+
+    @property
+    def get_up_rate(self):
+        return self.default_rate + self.rate_gap
+
+    @property
+    def get_down_rate(self):
+        return max(0.0, (self.default_rate - self.rate_gap))

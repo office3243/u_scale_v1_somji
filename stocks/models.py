@@ -48,7 +48,7 @@ class MaterialStock(models.Model):
         if self.is_first_stock:
             return None
         previous_stock = MaterialStock.objects.get_or_create(date=self.date-timezone.timedelta(days=1), material=self.material)[0]
-        previous_stock.save()
+        # previous_stock.save()
         return previous_stock
 
     @property

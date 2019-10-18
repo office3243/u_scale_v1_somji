@@ -243,9 +243,7 @@
         let wallet_payable_amount = 0;
         let non_wallet_amount = 0;
         {% if wallet %}
-            {% if not payment.get_is_wallet_payed %}
-                wallet_pay = true;
-            {% endif %}
+            wallet_pay = true;
             wallet_payable_amount = {{ wallet_payable_amount }};
             let wallet_deduct_type = "{{ wallet.deduct_type }}";
             non_wallet_amount = {{ non_wallet_amount }};

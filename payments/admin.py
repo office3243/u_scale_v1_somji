@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import AccountTransaction, Payment, WalletTransaction, CashTransaction
+from .models import AccountTransaction, Payment, WalletTransaction, CashTransaction, InPayment
+
+
+admin.site.register(InPayment)
 
 
 class PaymentAdmin(admin.ModelAdmin):

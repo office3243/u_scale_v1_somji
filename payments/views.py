@@ -52,8 +52,17 @@ def add(request, challan_no):
             account_transaction_1 = AccountTransaction.objects.create(payment=payment, amount=account_amount_1,
                                                                       bank_account=bank_account_1)
         if wallet is not None and ac_less_amount:
-            wallet_transaction = WalletTransaction.objects.create(payment=payment, wallet=wallet,
-                                                                  amount=ac_less_amount)
+            wallet_transaction, created = WalletTransaction.objects.get_or_create(payment=payment, wallet=wallet)
+            print(created, "--------------------------------------")
+            if created:
+                wallet_transaction.amount = ac_less_amount
+                wallet_transaction.deduct_from_wallet(ac_less_amount)
+                wallet_transaction.save()
+            else:
+                print("ELSE")
+                wallet_transaction.update_amount(ac_less_amount)
+                print(wallet_transaction.amount)
+                wallet_transaction.save()
         payment.save()
         return redirect(challan.get_absolute_url)
     else:

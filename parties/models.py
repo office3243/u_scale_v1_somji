@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.core.validators import ValidationError
@@ -131,26 +131,36 @@ class Wallet(models.Model):
 
 class WalletAdvance(models.Model):
 
-    # GATEWAY_CHOICES = (("CS", "Cash"), ("AC", "Account"))
+    GATEWAY_CHOICES = (("CS", "Cash"), ("AC", "Account"), ("IP", "In Payment"))
 
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
-    gateway_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    gateway_id = models.PositiveIntegerField()
-    gateway = GenericForeignKey("gateway_type", "gateway_id")
+    gateway = models.CharField(max_length=2, choices=GATEWAY_CHOICES, default="CS")
 
     created_on = models.DateTimeField(auto_now_add=True)
 
     image = models.ImageField(upload_to="parties/wallets/advances/", blank=True, null=True)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.wallet.party.get_display_text, self.amount, self.gateway_type)
+        return "{} - {} - {}".format(self.wallet.party.get_display_text, self.amount, self.gateway)
+
+    def add_to_wallet(self, amount):
+        self.wallet.add_balance(amount=amount)
+
+    def refund_amount(self, amount):
+
+        self.wallet.deduct_balance(amount=amount)
 
 
 def add_amount_to_wallet(sender, instance, created, *args, **kwargs):
     if created:
-        instance.add_balance(amount=instance.amount)
+        instance.add_to_wallet(amount=instance.amount)
+
+
+def refund_on_delete(sender, instance, *args, **kwargs):
+    instance.refund_amount(instance.amount)
+    instance.delete()
 
 
 post_save.connect(add_amount_to_wallet, sender=WalletAdvance)
-
+post_delete.connect(add_amount_to_wallet, sender=WalletAdvance)

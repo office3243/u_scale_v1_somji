@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.db.models import Sum, Max, Count
 from django.core.validators import ValidationError
 from decimal import Decimal
@@ -7,10 +7,37 @@ from itertools import chain
 from operator import attrgetter
 from django.conf import settings
 from django.urls import reverse_lazy
+from parties.models import WalletAdvance
 
 
 def save_payment(sender, instance, *args, **kwargs):
     instance.payment.save()
+
+
+class InPayment(models.Model):
+
+    STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
+    GATEWAY_CHOICES = (("AD", "Adjusted"), ("WL", "Wallet"), ("CS", "Cash"))
+
+    gateway = models.CharField(max_length=2, choices=GATEWAY_CHOICES)
+
+    payment = models.ForeignKey("Payment", on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=6, decimal_places=2)
+    created_on = models.DateField(auto_now_add=True)
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="DN")
+
+    def __str__(self):
+        return str(self.amount)
+
+
+def create_wallet_advance(sender, instance, created, *args, **kwargs):
+    if created and instance.gateway == "WL":
+        WalletAdvance.objects.create(amount=instance.amount, wallet=instance.payment.challan.party.get_wallet, gateway="WL")
+
+
+post_save.connect(create_wallet_advance, sender=InPayment)
+post_save.connect(save_payment, sender=InPayment)
+post_delete.connect(save_payment, sender=InPayment)
 
 
 class AccountTransaction(models.Model):
@@ -52,6 +79,7 @@ def check_status_ac_tr(sender, instance, *args, **kwargs):
 post_save.connect(check_status_ac_tr, sender=AccountTransaction)
 post_save.connect(assign_ac_tr_payment_code, sender=AccountTransaction)
 post_save.connect(save_payment, sender=AccountTransaction)
+post_delete.connect(save_payment, sender=AccountTransaction)
 
 
 class CashTransaction(models.Model):
@@ -71,31 +99,45 @@ class CashTransaction(models.Model):
 
 
 post_save.connect(save_payment, sender=CashTransaction)
+post_delete.connect(save_payment, sender=CashTransaction)
 
 
 class WalletTransaction(models.Model):
 
     payment = models.ForeignKey("Payment", on_delete=models.CASCADE)
     wallet = models.ForeignKey("parties.Wallet", on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=9, decimal_places=2)
+    amount = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal(0.00))
     created_on = models.DateTimeField(auto_now_add=True)
+    deducted_amount = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal(0.00))
 
-    def re_add_amount(self):
+    def refund_amount(self):
         self.wallet.add_balance(amount=self.amount)
+
+    def deduct_from_wallet(self, amount):
+        self.wallet.deduct_balance(amount)
+        return True
+
+    def update_amount(self, new_amount):
+        old_amount = self.amount
+        self.deduct_from_wallet(new_amount)
+        print(555)
+        self.amount = new_amount + old_amount
+        self.save()
 
     def __str__(self):
         return str(self.amount)
 
+#
+# def deduct_from_wallet(sender, created, instance, *args, **kwargs):
+#     if not instance.amount <= instance.wallet.balance:
+#         instance.delete()
+#     if instance.amount and created:
+#         instance.deduct_from_wallet(amount=instance.amount)
+#
 
-def deduct_from_wallet(sender, created, instance, *args, **kwargs):
-    if not instance.amount <= instance.wallet.balance:
-        instance.delete()
-    if created:
-        instance.wallet.deduct_balance(amount=instance.amount)
-
-
-post_save.connect(deduct_from_wallet, sender=WalletTransaction)
+# post_save.connect(deduct_from_wallet, sender=WalletTransaction)
 post_save.connect(save_payment, sender=WalletTransaction)
+post_delete.connect(save_payment, sender=WalletTransaction)
 
 
 class Payment(models.Model):
@@ -118,11 +160,21 @@ class Payment(models.Model):
 
     @property
     def calculate_payed_amount(self):
-        return sum([self.get_ac_tr_amount, self.get_cash_tr_amount, self.get_wallet_tr_amount, ])
+        print(sum([self.get_ac_tr_amount, self.get_cash_tr_amount, self.get_wallet_tr_amount, -self.get_inpayment_amount]))
+        return sum([self.get_ac_tr_amount, self.get_cash_tr_amount, self.get_wallet_tr_amount, -self.get_inpayment_amount])
 
     @property
     def get_absolute_url(self):
         return reverse_lazy("payments:detail", kwargs={"id": self.id})
+
+    @property
+    def get_inpayment_amount(self):
+        if self.inpayment_set.exists():
+            print(self.inpayment_set.first().amount)
+            return self.inpayment_set.first().amount
+        else:
+            print("ELES")
+            return Decimal(0.00)
 
     @property
     def calculate_payed_amount_pending(self):
@@ -130,7 +182,7 @@ class Payment(models.Model):
 
     @property
     def calculate_payed_amount_succeed(self):
-        return sum([self.get_ac_tr_amount_succeed, self.get_cash_tr_amount, self.get_wallet_tr_amount, ])
+        return sum([self.get_ac_tr_amount_succeed, self.get_cash_tr_amount, self.get_wallet_tr_amount, -self.get_inpayment_amount])
 
     @property
     def get_remaining_amount(self):
@@ -138,7 +190,6 @@ class Payment(models.Model):
 
     @property
     def get_is_wallet_payed(self):
-        print(self.wallettransaction_set.exists())
         return self.wallettransaction_set.exists()
 
     @property
@@ -193,6 +244,7 @@ def assign_amount(sender, instance, *args, **kwargs):
 
 def assign_payed_amount(sender, instance, *args, **kwargs):
     payed_amount = instance.calculate_payed_amount
+    print(payed_amount)
     if instance.payed_amount != payed_amount:
         instance.payed_amount = payed_amount
         instance.save()

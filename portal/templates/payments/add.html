@@ -54,6 +54,17 @@
                 <h3 class="m-auto">Payment</h3>
             </div>
             <div class="card-body" id="payment">
+                {% with challan.get_high_report_reserve_weights as reserve_weights %}
+                    {% if reserve_weights %}
+                        <div class="row">
+                            <span class="alert alert-warning btn-block text-center ">
+                                Last Report Percent was above 10% hence report reserve applied 15% on materials
+                                {% for reserve_weight in reserve_weights %}{{ reserve_weight.material.name }}, {% endfor %}
+                            </span>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
                 <div class="row">
                     <div class="col-lg-6" id="payment_form_section">
                         <div class="card border" style="box-shadow: none">
@@ -244,7 +255,7 @@
         let non_wallet_amount = 0;
         {% if wallet %}
             wallet_pay = true;
-            wallet_payable_amount = {{ wallet_payable_amount }};
+            wallet_payable_amount = {% if wallet_payable_amount > 0 %}{{ wallet_payable_amount }}{% else %}0{% endif %};
             let wallet_deduct_type = "{{ wallet.deduct_type }}";
             non_wallet_amount = {{ non_wallet_amount }};
             let only_wallet_pay = false;

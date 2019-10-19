@@ -9,6 +9,11 @@ import decimal
 from rates.models import RateGroup, GroupMaterialRate
 import math
 from django.contrib.auth.models import User
+from django.db.models import F
+
+
+REPORT_PERCENT_LOWER = 10
+REPORT_PERCENT_UPPER = 15
 
 
 class WeightEntry(models.Model):
@@ -118,18 +123,25 @@ class Weight(models.Model):
 
     @property
     def get_report_percent(self):
-        print(self.reportweight.weight_count, self.calculate_weight_sum)
-        return (self.reportweight.weight_count / self.calculate_weight_sum) * 100
+        try:
+            return (self.reportweight.weight_count / self.calculate_weight_sum) * 100
+        except:
+            return 0
 
     @property
-    def get_report_reserve_percent(self):
+    def get_last_report_percent(self):
+
         last_weights = Weight.objects.filter(challan__status="DN", challan__party=self.challan.party, material=self.material)
         if last_weights.exists():
             last_percent = last_weights.last().get_report_percent
-            print(last_percent, "------------------------------------- Last Percent")
-            return 10 if last_percent < 10 else 15
+            return last_percent
         else:
-            return 10
+            return 0
+
+    @property
+    def get_report_reserve_percent(self):
+        last_percent = self.get_last_report_percent
+        return REPORT_PERCENT_LOWER if last_percent <= REPORT_PERCENT_LOWER else REPORT_PERCENT_UPPER
 
     @property
     def calculate_weight_amount(self):
@@ -228,6 +240,15 @@ class Challan(models.Model):
 
     def __str__(self):
         return str(self.challan_no)
+
+    @property
+    def get_high_report_reserve_weights(self):
+        report_reserve_weights = []
+        for weight in self.weight_set.all():
+            print(weight.get_last_report_percent, "--------------------------------------------")
+            if weight.get_last_report_percent > REPORT_PERCENT_LOWER and weight.status == "PN":
+                report_reserve_weights.append(weight)
+        return report_reserve_weights
 
     @property
     def get_paying_amount(self):

@@ -109,15 +109,21 @@ def assign_reports(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
     if request.method == "POST":
         print(request.POST)
-        report_inputs = (report_input for report_input in request.POST if "report_input" in report_input)
+        report_inputs = [report_input for report_input in request.POST if "report_input" in report_input]
         print(report_inputs)
         for report_input in report_inputs:
             try:
                 weight_id = report_input.split("__")[-1]
-                report_type = request.POST["report_type__"+weight_id]
+                report_type = request.POST["report_type__" + weight_id]
                 weight = get_object_or_404(Weight, challan=challan, id=weight_id)
-                report_weight = ReportWeight.objects.get_or_create(weight=weight, weight_count=float(request.POST[report_input]), report_type=report_type)
-            except:
+                print(weight, weight.id)
+                report_weight = ReportWeight.objects.get_or_create(weight=weight)[0]
+                report_weight.weight_count = float(request.POST['report_input__' + weight_id])
+                report_weight.report_type = report_type
+                report_weight.save()
+                print(report_weight.weight_count)
+            except Exception as e:
+                print(e)
                 pass
         return redirect(challan.get_assign_rates_url)
     else:

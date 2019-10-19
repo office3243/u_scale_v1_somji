@@ -30,7 +30,7 @@ class Party(models.Model):
 
     @property
     def get_display_text(self):
-        return self.party_code
+        return self.name
 
     @property
     def get_absolute_url(self):
@@ -147,20 +147,19 @@ class WalletAdvance(models.Model):
     def add_to_wallet(self, amount):
         self.wallet.add_balance(amount=amount)
 
-    def refund_amount(self, amount):
-
-        self.wallet.deduct_balance(amount=amount)
+    def refund_amount_and_delete(self):
+        self.wallet.deduct_balance(amount=self.amount)
+        self.delete()
 
 
 def add_amount_to_wallet(sender, instance, created, *args, **kwargs):
     if created:
         instance.add_to_wallet(amount=instance.amount)
 
-
-def refund_on_delete(sender, instance, *args, **kwargs):
-    instance.refund_amount(instance.amount)
-    instance.delete()
+#
+# def refund_and_delete(sender, instance, *args, **kwargs):
+#     instance.refund_amount(instance.amount)
+#     instance.delete()
 
 
 post_save.connect(add_amount_to_wallet, sender=WalletAdvance)
-post_delete.connect(add_amount_to_wallet, sender=WalletAdvance)

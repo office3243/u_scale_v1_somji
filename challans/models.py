@@ -29,6 +29,7 @@ def save_signal_to_parent(sender, instance, *args, **kwargs):
 
 
 post_save.connect(save_signal_to_parent, sender=WeightEntry)
+post_delete.connect(save_signal_to_parent, sender=WeightEntry)
 
 
 class ReportWeight(models.Model):
@@ -49,12 +50,8 @@ class ReportWeight(models.Model):
 
 
 def check_status_report_weigth(sender, instance, *args, **kwargs):
-    print("GOT")
-    if instance.weight_count and instance.status == "PN":
-        instance.status = "DN"
-        instance.save()
-    elif not instance.weight.material.has_report and instance.status == "PN":
-        print("OK")
+    print(555)
+    if (instance.weight_count != 0.00 or not instance.weight.material.has_report) and instance.status == "PN":
         instance.status = "DN"
         instance.save()
     elif not instance.weight_count and instance.status == "DN":
@@ -88,9 +85,12 @@ class Weight(models.Model):
 
     @property
     def calculate_total_weight(self):
-        """to return sum of all weight entries in relation. if not exists return 0.00"""
+        return round(self.calculate_weight_sum - self.get_report_weight, 2)
+
+    @property
+    def calculate_weight_sum(self):
         if self.weightentry_set.exists():
-            return self.weightentry_set.aggregate(total_weight=Sum("entry"))['total_weight'] - self.get_report_weight
+            return round(self.weightentry_set.aggregate(total_weight=Sum("entry"))['total_weight'], 2)
         return 0.00
 
     @property
@@ -117,10 +117,34 @@ class Weight(models.Model):
             return "-"
 
     @property
-    def calculate_amount(self):
+    def get_report_percent(self):
+        print(self.reportweight.weight_count, self.calculate_weight_sum)
+        return (self.reportweight.weight_count / self.calculate_weight_sum) * 100
+
+    @property
+    def get_report_reserve_percent(self):
+        last_weights = Weight.objects.filter(challan__status="DN", challan__party=self.challan.party, material=self.material)
+        if last_weights.exists():
+            last_percent = last_weights.last().get_report_percent
+            print(last_percent, "------------------------------------- Last Percent")
+            return 10 if last_percent < 10 else 15
+        else:
+            return 10
+
+    @property
+    def calculate_weight_amount(self):
         if self.rate_per_unit:
             return self.rate_per_unit * decimal.Decimal(self.total_weight)
         return decimal.Decimal(0.00)
+
+    @property
+    def calculate_amount(self):
+        weight_amount = self.calculate_weight_amount
+        if hasattr(self, "reportweight") and self.reportweight.status == "PN":
+            amount = self.calculate_weight_amount * decimal.Decimal(1-(self.get_report_reserve_percent/100))
+        else:
+            amount = weight_amount
+        return amount
 
     @property
     def get_recent_entry(self):
@@ -144,13 +168,8 @@ def assign_total_weight(sender, instance, *args, **kwargs):
 
 
 def assign_amount(sender, instance, *args, **kwargs):
-    if hasattr(instance, "reportweight"):
-        if instance.reportweight.status == "PN":
-            amount = instance.calculate_amount * decimal.Decimal(0.9)
-        else:
-            amount = instance.calculate_amount
-    else:
-        amount = instance.calculate_amount
+    print("assign amount")
+    amount = instance.calculate_amount
     if instance.amount != amount:
         instance.amount = amount
         instance.save()
@@ -179,6 +198,7 @@ post_save.connect(assign_total_weight, sender=Weight)
 post_save.connect(assign_amount, sender=Weight)
 post_save.connect(check_weight_status, sender=Weight)
 post_save.connect(refresh_challan, sender=Weight)
+post_delete.connect(refresh_challan, sender=Weight)
 
 
 class Challan(models.Model):
@@ -225,24 +245,12 @@ class Challan(models.Model):
     def get_materials_has_report(self):
         return self.weight_set.filter(material__has_report=True)
 
-    # @property
-    # def calculate_weights_amount(self):
-    #     if self.weight_set.exists():
-    #         if hasattr(self, "reportweight"):
-    #             if self.reportweight.status == "PN":
-    #                 return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount'] * 0.9))
-    #         return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount']))
-    #     else:
-    #         return decimal.Decimal(0.00)
-    #
-
     @property
     def calculate_weights_amount(self):
         if self.weight_set.exists():
             return decimal.Decimal(math.ceil(self.weight_set.aggregate(amount=Sum("amount"))['amount']))
         else:
             return decimal.Decimal(0.00)
-
 
     @property
     def get_absolute_url(self):

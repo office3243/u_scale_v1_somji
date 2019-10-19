@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_delete
 from django.db.models import Sum, Max, Count
 from django.core.validators import ValidationError
 from decimal import Decimal
@@ -21,6 +21,7 @@ class InPayment(models.Model):
 
     gateway = models.CharField(max_length=2, choices=GATEWAY_CHOICES)
 
+    wallet_advance = models.OneToOneField("parties.WalletAdvance", on_delete=models.SET_NULL, blank=True, null=True)
     payment = models.ForeignKey("Payment", on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=6, decimal_places=2)
     created_on = models.DateField(auto_now_add=True)
@@ -32,12 +33,20 @@ class InPayment(models.Model):
 
 def create_wallet_advance(sender, instance, created, *args, **kwargs):
     if created and instance.gateway == "WL":
-        WalletAdvance.objects.create(amount=instance.amount, wallet=instance.payment.challan.party.get_wallet, gateway="WL")
+        wallet_advance = WalletAdvance.objects.create(amount=instance.amount, wallet=instance.payment.challan.party.get_wallet, gateway="WL")
+        instance.wallet_advance = wallet_advance
+        instance.save()
+
+
+def refund_wallet_advance(sender, instance, *args, **kwargs):
+    if instance.gateway == "WL":
+        instance.wallet_advance.refund_amount_and_delete()
 
 
 post_save.connect(create_wallet_advance, sender=InPayment)
 post_save.connect(save_payment, sender=InPayment)
 post_delete.connect(save_payment, sender=InPayment)
+post_delete.connect(refund_wallet_advance, sender=InPayment)
 
 
 class AccountTransaction(models.Model):
@@ -115,28 +124,29 @@ class WalletTransaction(models.Model):
 
     def deduct_from_wallet(self, amount):
         self.wallet.deduct_balance(amount)
-        return True
+        self.deducted_amount += amount
+        self.save()
 
     def update_amount(self, new_amount):
-        old_amount = self.amount
-        self.deduct_from_wallet(new_amount)
-        print(555)
-        self.amount = new_amount + old_amount
+        self.amount += new_amount
         self.save()
 
     def __str__(self):
         return str(self.amount)
 
-#
-# def deduct_from_wallet(sender, created, instance, *args, **kwargs):
-#     if not instance.amount <= instance.wallet.balance:
-#         instance.delete()
-#     if instance.amount and created:
-#         instance.deduct_from_wallet(amount=instance.amount)
-#
 
-# post_save.connect(deduct_from_wallet, sender=WalletTransaction)
+def deduct_from_wallet(sender, instance, *args, **kwargs):
+    if instance.deducted_amount != instance.amount:
+        instance.deduct_from_wallet(instance.amount-instance.deducted_amount)
+
+
+def refund_to_wallet(sender, instance, *args, **kwargs):
+    instance.wallet.add_balance(instance.amount)
+
+
+post_save.connect(deduct_from_wallet, sender=WalletTransaction)
 post_save.connect(save_payment, sender=WalletTransaction)
+post_delete.connect(refund_to_wallet, sender=WalletTransaction)
 post_delete.connect(save_payment, sender=WalletTransaction)
 
 

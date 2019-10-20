@@ -53,6 +53,7 @@
                                         </td>
                                         <td>
                                             <i class="fa {% if challan.status == "DN" %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
+                                            {{ challan.get_status_display }}
                                         </td>
                                         <td><a href="{{ challan.get_absolute_url }}"><i class="fa fa-eye"></i></a></td>
                                     </tr>

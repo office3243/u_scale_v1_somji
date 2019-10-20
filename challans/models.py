@@ -1,6 +1,6 @@
 from django.urls import reverse_lazy
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from . import validators
 from django.db.models import Sum, Count, Max, Min
 from django.conf import settings
@@ -225,8 +225,8 @@ class Challan(models.Model):
     weights_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
     extra_charges = models.DecimalField(verbose_name="Kata Charges", max_digits=9, decimal_places=2,
                                         default=decimal.Decimal(0.00))
-    round_amount = models.DecimalField(max_digits=4, decimal_places=2, default=decimal.Decimal(0.00))
-    total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00))
+    round_amount = models.DecimalField(max_digits=4, decimal_places=2, default=decimal.Decimal(0.00), validators=[MinValueValidator(limit_value=-10), MaxValueValidator(limit_value=10)])
+    total_amount = models.DecimalField(max_digits=9, decimal_places=2, default=decimal.Decimal(0.00), validators=[MinValueValidator(limit_value=0), MaxValueValidator(limit_value=100)])
     image = models.ImageField(upload_to="payments/", blank=True, null=True)
     extra_info = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=True)

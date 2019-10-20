@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.signals import post_save, pre_save, post_delete
+from django.db.models.signals import post_save, pre_save, post_delete, pre_delete
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.core.validators import ValidationError
+from django.contrib import messages
 
 
 class Party(models.Model):
@@ -96,6 +97,7 @@ class Wallet(models.Model):
 
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    upper_limit = models.DecimalField(max_digits=9, decimal_places=2, default=20000.00)
 
     deduct_type = models.CharField(max_length=3, choices=DEDUCT_TYPE_CHOICES)
     fixed_amount = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
@@ -128,6 +130,15 @@ class Wallet(models.Model):
             payable_amount = self.get_part_deduct_amount(amount)
         return payable_amount, amount - payable_amount
 
+    def clean(self):
+        super().clean()
+        if self.balance > self.upper_limit:
+            raise ValidationError("Wallet Balance cannot be greater than {}".format(self.upper_limit))
+
+
+def clean_self(sender, instance, *args, **kwargs):
+    instance.full_clean()
+
 
 class WalletAdvance(models.Model):
 
@@ -145,21 +156,31 @@ class WalletAdvance(models.Model):
         return "{} - {} - {}".format(self.wallet.party.get_display_text, self.amount, self.gateway)
 
     def add_to_wallet(self, amount):
-        self.wallet.add_balance(amount=amount)
+        try:
+            self.wallet.add_balance(amount=amount)
+            self.wallet.full_clean()
+        except ValidationError:
+            self.delete()
+
+
+    def refund_amount(self):
+        print("REfund")
+        self.wallet.deduct_balance(amount=self.amount)
+        return True
 
     def refund_amount_and_delete(self):
-        self.wallet.deduct_balance(amount=self.amount)
+        self.refund_amount()
         self.delete()
 
 
-def add_amount_to_wallet(sender, instance, created, *args, **kwargs):
+def add_amount_to_wallet(sender, created, instance, *args, **kwargs):
     if created:
         instance.add_to_wallet(amount=instance.amount)
 
-#
-# def refund_and_delete(sender, instance, *args, **kwargs):
-#     instance.refund_amount(instance.amount)
-#     instance.delete()
+
+def refund_and_delete(sender, instance, *args, **kwargs):
+    instance.refund_amount()
 
 
 post_save.connect(add_amount_to_wallet, sender=WalletAdvance)
+pre_delete.connect(refund_and_delete, sender=WalletAdvance)

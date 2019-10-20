@@ -105,9 +105,12 @@ def add(request, challan_no):
         cash_amount = decimal.Decimal(request.POST.get('cash_amount') or 0)
         account_amount_1 = decimal.Decimal(request.POST.get('account_amount') or 0)
         ac_less_amount = decimal.Decimal(request.POST.get('ac_less_amount') or 0)
-        total_pay = cash_amount + account_amount_1 + ac_less_amount + payment.payed_amount + round_amount - extra_charges
+        # total_pay = cash_amount + account_amount_1 + ac_less_amount + payment.payed_amount + round_amount - extra_charges
+        total_pay = cash_amount + account_amount_1 + ac_less_amount + payment.payed_amount - extra_charges
+        print(total_pay, payment.amount, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        # return redirect(challan.get_absolute_url)
         if total_pay > payment.amount:
-            messages.warning(request, "Amount should be less or equal to {}".format(payment.amount))
+            messages.warning(request, "Total Amount should be less or equal to {} and it is {}".format(payment.amount, total_pay))
             return redirect(challan.get_payment_add_url)
         if cash_amount:
             cash_transaction = CashTransaction.objects.create(payment=payment, amount=cash_amount, payed_on=timezone.now(), status="DN")

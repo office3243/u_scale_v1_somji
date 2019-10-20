@@ -82,12 +82,12 @@
                                         <div class="row">
                                             <div  class="form-group col-lg-6">
                                                 <label for="extra_charges">Kata Charges</label>
-                                                <input value="{{ payment.challan.extra_charges }}" step="1" name="extra_charges" class="form-control" id="extra_charges" type="number">
+                                                <input min="0" value="{{ payment.challan.extra_charges }}" step="1" name="extra_charges" class="form-control" id="extra_charges" type="number">
                                             </div>
                                             <br>
                                             <div class="form-group col-lg-6">
                                                 <label for="round_amount">Round Amount</label>
-                                                <input value="{{ payment.challan.round_amount }}" step="1" name="round_amount" class="form-control" id="round_amount" type="number">
+                                                <input min="-10" max="10" value="{{ payment.challan.round_amount }}" step="1" name="round_amount" class="form-control" id="round_amount" type="number">
                                             </div>
                                         </div>
                                         <hr>
@@ -110,11 +110,11 @@
                                             <span>3 - Cash Section</span>
                                             <br><br>
                                             <div style="margin-left: 20px" class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input" name="is_cash" id="is_cash" checked>
+                                                <input type="checkbox" class="custom-control-input" name="is_cash" id="is_cash">
                                                 <label class="custom-control-label" for="is_cash">Do You Want Cash Transaction ? </label>
                                             </div>
                                             <br>
-                                            <div style="margin-left: 20px" class="form-group cash_mode_section">
+                                            <div style="margin-left: 20px;display: none" class="form-group cash_mode_section">
                                                 <label for="cash_amount">Cash Amount</label>
                                                 <input name="cash_amount" class="form-control" id="cash_amount" type="number">
                                             </div>

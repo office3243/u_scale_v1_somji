@@ -30,6 +30,11 @@ INSTALLED_APPS = [
     'rates',
     'bank_accounts',
     'payment_parties',
+
+    'loadings',
+    'stocks',
+    'dealers',
+
 ]
 
 MIDDLEWARE = [

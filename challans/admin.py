@@ -11,6 +11,7 @@ class ChallanAdmin(admin.ModelAdmin):
 
     list_display = ("challan_no", "party", "weights_amount", "created_on", "status")
     inlines = [WeightInline, ]
+    readonly_fields = ("created_on", "updated_on")
 
 
 admin.site.register(ReportWeight)

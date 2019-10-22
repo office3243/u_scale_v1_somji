@@ -53,9 +53,14 @@ class ReportWeight(models.Model):
     def __str__(self):
         return "{} - {} - {}".format(self.weight.material.name, self.weight_count, self.get_report_type_display())
 
+    @property
+    def get_stock_weight(self):
+        if self.report_type == "RP":
+            return self.weight_count
+        return 0.00
+
 
 def check_status_report_weigth(sender, instance, *args, **kwargs):
-    print(555)
     if (instance.weight_count != 0.00 or not instance.weight.material.has_report) and instance.status == "PN":
         instance.status = "DN"
         instance.save()
@@ -80,6 +85,7 @@ class Weight(models.Model):
     amount = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
     updated_on = models.DateTimeField(auto_now=True)
 
+    stock_weight = models.FloatField(validators=[MinValueValidator(0.00)], default=0.00)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default="PN")
 
     def __str__(self):
@@ -104,6 +110,17 @@ class Weight(models.Model):
             return self.reportweight.weight_count
         else:
             return 0.0
+
+    @property
+    def get_report_stock_weight(self):
+        if hasattr(self, "reportweight"):
+            return self.reportweight.get_stock_weight
+        else:
+            return 0.0
+
+    @property
+    def calculate_stock_weight(self):
+        return self.calculate_weight_sum + self.get_report_stock_weight
 
     @property
     def get_default_rate(self):
@@ -205,11 +222,18 @@ def refresh_challan(sender, instance, *args, **kwargs):
     instance.refresh_challan()
 
 
+def assign_stock_weight(sender, instance, *args, **kwargs):
+    stock_weight = instance.calculate_stock_weight
+    if instance.stock_weight != stock_weight:
+        instance.stock_weight = stock_weight
+        instance.save()
+
 post_save.connect(assign_rate_per_unit, sender=Weight)
 post_save.connect(assign_total_weight, sender=Weight)
 post_save.connect(assign_amount, sender=Weight)
 post_save.connect(check_weight_status, sender=Weight)
 post_save.connect(refresh_challan, sender=Weight)
+post_save.connect(assign_stock_weight, sender=Weight)
 post_delete.connect(refresh_challan, sender=Weight)
 
 

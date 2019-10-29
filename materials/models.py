@@ -9,6 +9,7 @@ class Material(models.Model):
     material_code = models.CharField(max_length=12)
     extra_info = models.TextField(blank=True)
     has_report = models.BooleanField(default=False)
+    merge_material = models.ForeignKey("self", related_name="merge_materials", on_delete=models.SET_NULL, blank=True, null=True)
 
     default_rate = models.FloatField(default=1.0)
     rate_gap = models.FloatField(default=1.0)
@@ -38,3 +39,11 @@ class Material(models.Model):
     @property
     def get_down_rate(self):
         return max(0.0, (self.default_rate - self.rate_gap))
+
+    @property
+    def get_merge_material(self):
+        return self.merge_material
+
+    @property
+    def get_merge_materials(self):
+        return self.merge_materials.all()

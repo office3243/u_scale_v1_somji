@@ -129,8 +129,8 @@ class Weight(models.Model):
             try:
                 return GroupMaterialRate.objects.get(material=self.material, rate_group=self.challan.party.rate_group).amount
             except:
-                return decimal.Decimal(1)
-        return decimal.Decimal(1)
+                pass
+        return decimal.Decimal(self.material.default_rate)
 
     @property
     def get_report_weight_display(self):

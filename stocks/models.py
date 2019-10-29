@@ -4,6 +4,7 @@ from challans.models import Challan, Weight
 from django.db.models import Min, Max, Sum, Q
 from django.db.models.signals import post_save, pre_save, post_delete, pre_delete
 from loadings.models import Loading, LoadingWeight
+from django.contrib import messages
 
 
 def get_start_date():
@@ -29,6 +30,7 @@ class MaterialStock(models.Model):
     material = models.ForeignKey("materials.Material", on_delete=models.PROTECT)
     opening_weight = models.FloatField(default=0.0)
     in_weight = models.FloatField(default=0.0)
+    merge_in_weight = models.FloatField(default=0.0)
     out_weight = models.FloatField(default=0.0)
     closing_weight = models.FloatField(default=0.0)
 
@@ -37,9 +39,18 @@ class MaterialStock(models.Model):
     def __str__(self):
         return "{} - {} {}".format(self.date, self.material.get_display_text, self.opening_weight)
 
+    class Meta:
+        ordering = ("-date", )
+
     @property
     def is_first_stock(self):
         if self.date <= get_start_date():
+            return True
+        return False
+
+    @property
+    def is_last_stock(self):
+        if self.date >= timezone.now().date():
             return True
         return False
 
@@ -52,6 +63,14 @@ class MaterialStock(models.Model):
         return previous_stock
 
     @property
+    def get_next_stock(self):
+        if self.is_last_stock:
+            return None
+        next_stock = MaterialStock.objects.get_or_create(date=self.date+timezone.timedelta(days=1), material=self.material)[0]
+        # previous_stock.save()
+        return next_stock
+
+    @property
     def calculate_opening_weight(self):
         previous_stock = self.get_previous_stock
         if previous_stock is not None:
@@ -61,13 +80,30 @@ class MaterialStock(models.Model):
     #   Challans Section
 
     @property
+    def get_in_weight_display(self):
+        return "{} + {} = {}".format(self.in_weight-self.merge_in_weight, self.merge_in_weight, self.in_weight)
+
+    @property
     def get_challans(self):
         return Challan.objects.filter(created_on__date=self.date)
 
     @property
+    def calcualte_challans_weight(self):
+        challans_weight = Weight.objects.filter(challan__in=self.get_challans, material=self.material).aggregate(total=Sum("stock_weight"))['total'] or 0.00
+        return round(challans_weight, 2)
+
+    @property
     def calculate_in_weight(self):
-        in_weight = Weight.objects.filter(challan__in=self.get_challans, material=self.material).aggregate(total=Sum("stock_weight"))['total'] or 0.00
+        in_weight = self.calcualte_challans_weight + self.calculate_merge_in_weight
         return round(in_weight, 2)
+
+    @property
+    def calculate_merge_in_weight(self):
+        merge_weight = 0
+        if self.material.get_merge_materials.exists():
+            for material in self.material.get_merge_materials:
+                merge_weight += (Weight.objects.filter(challan__in=self.get_challans, material=material).aggregate(total=Sum("stock_weight"))['total'] or 0.00)
+        return merge_weight
 
     @property
     def check_challan_status(self):
@@ -106,12 +142,25 @@ class MaterialStock(models.Model):
         return "DN" if (self.check_challan_status and self.check_previous_status and self.check_loading_status) else "PN"
 
 
+# def check_merge_material(sender, created, instance, *args, **kwargs):
+#     if created:
+#         if instance.material.get_merge_material:
+#             instance.delete()
+
+
 def assign_opening_weight(sender, instance, *args, **kwargs):
     if not instance.is_first_stock:
         opening_weight = instance.calculate_opening_weight
         if instance.opening_weight != opening_weight:
             instance.opening_weight = opening_weight
             instance.save()
+
+
+def assign_merge_in_weight(sender, instance, *args, **kwargs):
+    merge_in_weight = instance.calculate_merge_in_weight
+    if instance.merge_in_weight != merge_in_weight:
+        instance.merge_in_weight = merge_in_weight
+        instance.save()
 
 
 def assign_in_weight(sender, instance, *args, **kwargs):
@@ -142,8 +191,16 @@ def assign_status(sender, instance, *args, **kwargs):
         instance.save()
 
 
+def refresh_next_stock(sender, instance, *args, **kwargs):
+    if instance.get_next_stock:
+        return instance.get_next_stock.save()
+
+
+# post_save.connect(check_merge_material, sender=MaterialStock)
 post_save.connect(assign_opening_weight, sender=MaterialStock)
+post_save.connect(assign_merge_in_weight, sender=MaterialStock)
 post_save.connect(assign_in_weight, sender=MaterialStock)
 post_save.connect(assign_out_weight, sender=MaterialStock)
 post_save.connect(assign_closing_weight, sender=MaterialStock)
 post_save.connect(assign_status, sender=MaterialStock)
+post_save.connect(refresh_next_stock, sender=MaterialStock)

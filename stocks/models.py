@@ -196,11 +196,50 @@ def refresh_next_stock(sender, instance, *args, **kwargs):
         return instance.get_next_stock.save()
 
 
+def assign_all_changes(sender, instance, *args, **kwargs):
+
+    is_changed = False
+
+    if not instance.is_first_stock:
+        opening_weight = instance.calculate_opening_weight
+        if instance.opening_weight != opening_weight:
+            instance.opening_weight = opening_weight
+            is_changed = True
+
+    merge_in_weight = instance.calculate_merge_in_weight
+    if instance.merge_in_weight != merge_in_weight:
+        instance.merge_in_weight = merge_in_weight
+        is_changed = True
+
+    in_weight = instance.calculate_in_weight
+    if instance.in_weight != in_weight:
+        instance.in_weight = in_weight
+        is_changed = True
+
+    out_weight = instance.calculate_out_weight
+    if instance.out_weight != out_weight:
+        instance.out_weight = out_weight
+        is_changed = True
+
+    closing_weight = instance.calculate_closing_weight
+    if instance.closing_weight != closing_weight:
+        instance.closing_weight = closing_weight
+        is_changed = True
+
+    status = instance.check_status
+    if instance.status != status:
+        instance.status = status
+        is_changed = True
+
+    if is_changed:
+        instance.save()
+
 # post_save.connect(check_merge_material, sender=MaterialStock)
-post_save.connect(assign_opening_weight, sender=MaterialStock)
-post_save.connect(assign_merge_in_weight, sender=MaterialStock)
-post_save.connect(assign_in_weight, sender=MaterialStock)
-post_save.connect(assign_out_weight, sender=MaterialStock)
-post_save.connect(assign_closing_weight, sender=MaterialStock)
-post_save.connect(assign_status, sender=MaterialStock)
+post_save.connect(assign_all_changes, sender=MaterialStock)
+# post_save.connect(assign_opening_weight, sender=MaterialStock)
+# post_save.connect(assign_merge_in_weight, sender=MaterialStock)
+# post_save.connect(assign_in_weight, sender=MaterialStock)
+# post_save.connect(assign_out_weight, sender=MaterialStock)
+# post_save.connect(assign_closing_weight, sender=MaterialStock)
+# post_save.connect(assign_status, sender=MaterialStock)
 post_save.connect(refresh_next_stock, sender=MaterialStock)

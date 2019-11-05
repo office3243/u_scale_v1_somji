@@ -123,7 +123,7 @@ class Wallet(models.Model):
             return self.balance
 
     def get_part_deduct_amount(self, amount):
-        return min(amount//3, self.balance)
+        return 1000.00
 
     def get_payable_amount(self, amount):
         if self.deduct_type == "FXD":

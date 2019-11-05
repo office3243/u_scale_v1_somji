@@ -147,6 +147,10 @@ class Weight(models.Model):
             return 0
 
     @property
+    def get_default_report_weight(self):
+        return round(self.calculate_weight_sum * 0.1, 2)
+
+    @property
     def get_last_report_percent(self):
 
         last_weights = Weight.objects.filter(challan__status="DN", challan__party=self.challan.party, material=self.material)
@@ -232,6 +236,7 @@ def assign_stock_weight(sender, instance, *args, **kwargs):
     if instance.stock_weight != stock_weight:
         instance.stock_weight = stock_weight
         instance.save()
+
 
 post_save.connect(assign_rate_per_unit, sender=Weight)
 post_save.connect(assign_total_weight, sender=Weight)

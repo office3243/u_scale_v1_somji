@@ -88,22 +88,6 @@ def entries_done(request, challan_no):
     return redirect(challan.get_assign_reports_url)
 
 
-# @login_required
-# def assign_reports(request, challan_no):
-#     challan = get_object_or_404(Challan, challan_no=challan_no)
-#     ReportWeightFormSet = inlineformset_factory(Challan, Weight, form=ReportWeightForm, extra=0, can_delete=False)
-#     if request.method == "POST":
-#         formset = ReportWeightFormSet(request.POST, instance=challan)
-#         if formset.is_valid():
-#             formset.save()
-#             challan.refresh_weights()
-#             challan.save()
-#             return redirect(challan.get_assign_rates_url)
-#     formset = ReportWeightFormSet(instance=challan)
-#     context = {"challan": challan, "formset": formset}
-#     return render(request, "challans/assign_reports.html", context)
-
-
 @login_required
 def assign_reports(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
@@ -190,29 +174,6 @@ def weight_entry_create(request):
         return redirect(str(challan.get_entries_url) + "?lmtid={}".format(material_id))
     else:
         return redirect("portal:home")
-
-
-@login_required
-def challan_publish(request, challan_no):
-
-    challan = get_object_or_404(Challan, challan_no=challan_no)
-    if request.method == "POST":
-        print(request.POST, request.FILES)
-        gateway_choice = request.POST['gateway_choice']
-        is_payed = request.POST['is_payed']
-        extra_info = request.POST['extra_info']
-        image = request.FILES['image']
-        challan.payment_gateway_choice = gateway_choice
-        challan.is_payed = is_payed
-        challan.image = image
-        challan.extra_info = extra_info
-        challan.save()
-        return redirect("portal:home")
-    else:
-        materials = Material.objects.filter(is_active=True)
-        parties = Party.objects.filter(is_active=True)
-        context = {'materials': materials, "parties": parties, "challan": challan}
-        return render(request, "challans/update.html", context)
 
 
 class ChallanDoneView(LoginRequiredMixin, DetailView):

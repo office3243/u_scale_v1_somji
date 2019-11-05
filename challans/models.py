@@ -280,6 +280,10 @@ class Challan(models.Model):
         return report_reserve_weights
 
     @property
+    def get_date_display(self):
+        return self.created_on.strftime("%d/%m/%y")
+
+    @property
     def get_paying_amount(self):
         return self.total_amount
 

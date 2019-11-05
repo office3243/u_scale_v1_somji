@@ -4,6 +4,7 @@ from django.conf.urls import url, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    url(r"^cms_admin/", include('cms_admin.urls', namespace="cms_admin")),
     url(r"^", include('portal.urls', namespace="portal")),
     url(r"^accounts/", include('accounts.urls', namespace="accounts")),
     url(r"^challans/", include('challans.urls', namespace="challans")),

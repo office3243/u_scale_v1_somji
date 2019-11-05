@@ -106,6 +106,10 @@ class Wallet(models.Model):
     def __str__(self):
         return "{} - {} Rs".format(self.party.get_display_text, self.balance)
 
+    @property
+    def get_absolute_url(self):
+        return reverse_lazy("parties:wallet_detail", kwargs={"id": self.id})
+
     def deduct_balance(self, amount):
         if self.is_active:
             self.balance -= amount
@@ -161,7 +165,6 @@ class WalletAdvance(models.Model):
             self.wallet.full_clean()
         except ValidationError:
             self.delete()
-
 
     def refund_amount(self):
         print("REfund")

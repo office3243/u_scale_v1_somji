@@ -119,10 +119,13 @@ class WalletTransaction(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     deducted_amount = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal(0.00))
 
+    previous_balance = models.DecimalField(max_digits=8, decimal_places=2)
+
     def refund_amount(self):
         self.wallet.add_balance(amount=self.amount)
 
     def deduct_from_wallet(self, amount):
+        self.previous_balance = self.wallet.balance
         self.wallet.deduct_balance(amount)
         self.deducted_amount += amount
         self.save()
@@ -154,7 +157,6 @@ class Payment(models.Model):
     PAYMENT_MODE_CHOICES = (("DP", "Direct Payment"), ("AL", "Account Less"))
     PAYMENT_STATUS_CHOICES = (("PN", "Pending"), ("DN", "Done"))
 
-    payment_code = models.CharField(max_length=12, blank=True, null=True)
     challan = models.OneToOneField("challans.Challan", on_delete=models.CASCADE)
     payment_mode = models.CharField(max_length=2, choices=PAYMENT_MODE_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=2, choices=PAYMENT_STATUS_CHOICES, default="PN")
@@ -167,6 +169,10 @@ class Payment(models.Model):
 
     def __str__(self):
         return "{} - {} ({}) - ".format(self.challan.party.get_display_text, self.amount, self.get_status_display())
+
+    @property
+    def get_date_display(self):
+        return self.created_on.strftime("%d/%m/%Y")
 
     @property
     def calculate_payed_amount(self):
@@ -281,16 +287,6 @@ def clean_payment(sender, instance, *agrs, **kwargs):
     print("Full Clean")
     instance.full_clean()
 
-
-def payment_code_generator(payment):
-    return "{}{}".format(settings.PARTY_CODE_PREFIX, payment.id)
-
-
-def assign_payment_code(sender, instance, *args, **kwargs):
-    payment_code = payment_code_generator(instance)
-    if instance.payment_code != payment_code:
-        instance.payment_code = payment_code
-        instance.save()
 
 
 post_save.connect(assign_payment_mode, sender=Payment)

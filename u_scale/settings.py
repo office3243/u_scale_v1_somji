@@ -21,6 +21,7 @@ INSTALLED_APPS = [
 
     'crispy_forms',
 
+    'cms_admin',
     'portal',
     'accounts',
     'parties',
@@ -117,7 +118,6 @@ SITE_DOMAIN = "127.0.0.1:8000"
 BRANCH_ID = "SM"
 BRANCH_AC_PAYMENT_PREFIX = "SMPAC"
 PARTY_CODE_PREFIX = "SMPR"
-PAYMENT_CODE_PREFIX = "SMPM"
 CHALLAN_NO_PREFIX = "SMCH"
 
 LOGIN_URL = reverse_lazy("accounts:login")

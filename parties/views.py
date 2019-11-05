@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.urls import reverse_lazy
-from .models import Party
+from .models import Party, Wallet, WalletAdvance
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -47,7 +47,7 @@ class PartyDetailView(LoginRequiredMixin, DetailView):
 class PartyUpdateView(LoginRequiredMixin, UpdateView):
     model = Party
     template_name = "parties/update.html"
-    fields = ("rate_group", "rate_type")
+    fields = ("rate_group", "rate_type", "is_wallet_party")
     slug_field = "party_code"
     slug_url_kwarg = "party_code"
     success_url = reverse_lazy('parties:list')
@@ -57,3 +57,19 @@ class PartyUpdateView(LoginRequiredMixin, UpdateView):
         if party.is_active:
             return party
         return Http404("Party Is Not Active")
+
+
+class WalletListView(LoginRequiredMixin, ListView):
+
+    model = Wallet
+    template_name = "parties/wallet_list.html"
+    context_object_name = "wallets"
+    ordering = "-id"
+
+
+class WalletDetailView(LoginRequiredMixin, DetailView):
+    model = Wallet
+    template_name = "parties/wallet_detail.html"
+    context_object_name = "wallet"
+    slug_field = "id"
+    slug_url_kwarg = "id"

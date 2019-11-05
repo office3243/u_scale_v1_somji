@@ -10,7 +10,7 @@
             <div class="card-header">
                 <div class="row">
                     <div class="col-lg-9 m-auto">
-                        <h3 class="m-auto">Party List</h3>
+                        <h3 class="m-auto">Party Details | {{ party.get_display_text }}</h3>
                     </div>
                     <div class="col-lg-3">
                         <a class="float-right" href="{{ party.get_challan_ad_url }}"><button class="btn btn-primary">Create Challan</button></a>
@@ -30,7 +30,7 @@
                         </tr>
                         <tr>
                             <th>Phone</th>
-                            <td>{{ party.name }}</td>
+                            <td>{{ party.phone }}</td>
                         </tr>
                         <tr>
                             <th>Whatsapp</th>
@@ -121,10 +121,11 @@
                     <a href="{{ party.get_update_url }}" class="m-auto"><button class="btn btn-primary">Update</button></a>
                 </div>
             </div>
-            <div class="container">
-                <button class="btn btn-indigo" onclick="goBack()"><i class="fa fa-arrow-left"></i> Go Back</button>
+            <div class="card-footer">
+                {% include "portal/goback_btn.html" %}
             </div>
         </div>
+
     </div>
 
 {% endblock %}

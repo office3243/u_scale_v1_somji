@@ -5,6 +5,7 @@ from django.db.models import Min, Max, Sum, Q
 from django.db.models.signals import post_save, pre_save, post_delete, pre_delete
 from loadings.models import Loading, LoadingWeight
 from django.contrib import messages
+from materials.models import Material
 
 
 def get_start_date():
@@ -81,7 +82,10 @@ class MaterialStock(models.Model):
 
     @property
     def get_in_weight_display(self):
-        return "{} + {} = {}".format(self.in_weight-self.merge_in_weight, self.merge_in_weight, self.in_weight)
+        if self.material.get_merge_materials.exists():
+            return "{} + {} = {}".format(self.in_weight-self.merge_in_weight, self.merge_in_weight, self.in_weight)
+        else:
+            return self.in_weight
 
     @property
     def get_challans(self):
@@ -243,3 +247,8 @@ post_save.connect(assign_all_changes, sender=MaterialStock)
 # post_save.connect(assign_closing_weight, sender=MaterialStock)
 # post_save.connect(assign_status, sender=MaterialStock)
 post_save.connect(refresh_next_stock, sender=MaterialStock)
+
+
+def create_todays_stocks():
+    for material in Material.objects.filter(merge_material=None).all():
+        MaterialStock.objects.get_or_create(material=material, date=timezone.now().date())

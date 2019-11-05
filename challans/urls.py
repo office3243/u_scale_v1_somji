@@ -16,6 +16,5 @@ urlpatterns = [
     url(r'^done/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.ChallanDoneView.as_view(), name="done"),
 
     url(r'^weight_entry/create/$', views.weight_entry_create, name="weight_entry_create"),
-    url(r'^publish/(?P<challan_no>[0-9a-zA-Z-]+)/$', views.challan_publish, name="publish"),
 
 ]

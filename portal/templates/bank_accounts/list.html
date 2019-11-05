@@ -61,8 +61,10 @@
                              {% endif %}
                          </tbody>
                     </table>
-                    {% include "portal/goback_btn.html" %}
                  </div>
+            </div>
+            <div class="card-footer">
+                {% include "portal/goback_btn.html" %}
             </div>
         </div>
     </div>
@@ -73,16 +75,7 @@
     <script src="{% static "js/addons/datatables-select.min.js" %}" rel="stylesheet"></script>
     <script>
         $('#dt-basic-checkbox').dataTable({
-
-        columnDefs: [{
-        orderable: false,
-        className: 'select-checkbox',
-        targets: 0
-        }],
-        select: {
-        style: 'os',
-        selector: 'td:first-child'
-        }
+        "pageLength": 25,
         });
     </script>
 {% endblock %}

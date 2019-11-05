@@ -120,7 +120,7 @@
                                         <td id="total_weight_{{ weight.id }}">{{ weight.total_weight }}</td>
                                         <td>
                                             <div class="col-lg-3">
-                                                <input value="{{ weight.reportweight.weight_count|default:0.0 }}" min="0" id="report_input__{{ weight.id }}" name="report_input__{{ weight.id }}" type="number" step="0.1" class="form-control">
+                                                <input value="{{ weight.reportweight.weight_count|default:0.0 }}" min="0" id="report_input__{{ weight.id }}" name="report_input__{{ weight.id }}" type="number" step="0.01" class="form-control">
                                             </div>
                                         </td>
                                         <td>

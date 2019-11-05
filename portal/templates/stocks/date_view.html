@@ -7,7 +7,7 @@
     <div class="col-lg-6 m-auto">
         <div class="card">
             <div class="card-header">
-                <h3>Stock On {{ date }} | {{ stock.status }}</h3>
+                <h3>Stock On {{ date|date:"d/m/Y" }}</h3>
             </div>
             <div class="card-body">
                 <div>
@@ -19,6 +19,7 @@
                             <th>In</th>
                             <th>Out</th>
                             <th>Closing Weight</th>
+                            <th>Status</th>
                         </thead>
                         <tbody>
                             {% for stock in stocks %}
@@ -29,6 +30,13 @@
                                     <td>{{ stock.get_in_weight_display }}</td>
                                     <td>{{ stock.out_weight }}</td>
                                     <td>{{ stock.closing_weight }}</td>
+                                    <td>
+                                        {% if stock.status == "DN" %}
+                                            <i class="fa fa-check text-success"></i>
+                                        {% else %}
+                                            <i class="fa fa-check text-success"></i>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -36,15 +44,29 @@
                 </div>
                 <hr><hr>
                 <div class="float-right">
-                    <a href="{% url "stocks:date_stock_detail" day=previous_date.day month=previous_date.month year=previous_date.year %}">
-                        <button class="btn btn-primary"><i class="fa fa-arrow-left"> </i> Previous</button>
-                    </a>
-                    <a href="{% url "stocks:date_stock_detail" day=next_date.day month=next_date.month year=next_date.year %}">
-                        <button class="btn btn-primary"><i class="fa fa-arrow-right"> </i> Next</button>
-                    </a>
+                    {% if not stocks.first.is_first_stock %}
+                        <a href="{% url "stocks:date_stock_detail" day=previous_date.day month=previous_date.month year=previous_date.year %}">
+                            <button class="btn btn-primary"><i class="fa fa-arrow-left"> </i> Previous</button>
+                        </a>
+                    {% endif %}
+                    {% if not stocks.first.is_last_stock %}
+                        <a href="{% url "stocks:date_stock_detail" day=next_date.day month=next_date.month year=next_date.year %}">
+                            <button class="btn btn-primary"><i class="fa fa-arrow-right"> </i> Next</button>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
+{% endblock %}
+
+{% block custom_script %}
+    <script>
+        {#let today = new Date();#}
+        {#let stock_date = Date("{{ date|date:"d/m/Y" }}");#}
+        {#console.log(today);#}
+        {#console.log(stock_date);#}
+        {#console.log(today == stock_date);#}
+    </script>
 {% endblock %}

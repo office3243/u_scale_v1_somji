@@ -47,19 +47,22 @@
                                         <td>{{ challan.total_amount }}</td>
                                         <td>
                                             <i class="fa {% if challan.is_entries_done %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
+                                            <span style="display: none">{{ challan.is_entries_done }}</span>
                                         </td>
                                         <td>
                                             <i class="fa {% if challan.is_reports_done %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
+                                            <span style="display: none">{{ challan.is_reports_done }}</span>
                                         </td>
                                         <td>
                                             <i class="fa {% if challan.is_payed %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
+                                            <span style="display: none">{{ challan.is_payed }}</span>
                                         </td>
                                         <td>
                                             <i class="fa {% if challan.status == "DN" %}fa-check text-success{% else %}fa-times text-danger{% endif %}"></i>
-                                            {{ challan.get_status_display }}
+                                            <span style="display: none">{{ challan.get_status_display }}</span>
                                         </td>
+                                        <td>{{ challan.get_date_display }}</td>
                                         <td><a href="{{ challan.get_absolute_url }}"><i class="fa fa-eye"></i></a></td>
-                                        <td>{{ challan.created_on }}</td>
                                     </tr>
                                 {% endfor %}
                              {% else %}
@@ -80,16 +83,7 @@
     <script src="{% static "js/addons/datatables-select.min.js" %}" rel="stylesheet"></script>
     <script>
         $('#dt-basic-checkbox').dataTable({
-
-        columnDefs: [{
-        orderable: false,
-        className: 'select-checkbox',
-        targets: 0
-        }],
-        select: {
-        style: 'os',
-        selector: 'td:first-child'
-        }
+        "pageLength": 25,
         });
     </script>
 {% endblock %}

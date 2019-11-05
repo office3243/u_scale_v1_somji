@@ -9,7 +9,8 @@ class WeightInline(admin.StackedInline):
 
 class ChallanAdmin(admin.ModelAdmin):
 
-    list_display = ("challan_no", "party", "weights_amount", "created_on", "status")
+    list_display = ("challan_no", "party", "total_amount", "created_on", "is_entries_done", "is_reports_done", "is_payed",  "status")
+    list_filter = ("party", "created_on", "status")
     inlines = [WeightInline, ]
     readonly_fields = ("created_on", "updated_on")
 
@@ -20,15 +21,26 @@ class WeightAdmin(admin.ModelAdmin):
     list_filter = ("challan", "material", "challan__created_on")
 
 
+def get_challan_no(instance):
+    return instance.weight.challan.challan_no
+
+
+def get_material(instance):
+    return instance.weight.material.name
+
+# def get_weight(instance):
+#     return instance.wei
+
+
 class ReportWeightAdmin(admin.ModelAdmin):
 
     list_filter = ("weight__material", "weight__challan", "weight__challan__party")
-    list_display = ("weight", "weight_count", "report_type")
+    list_display = ("weight", get_challan_no, "weight_count", "report_type", "reported_on")
 
 
 class WeightEntryAdmin(admin.ModelAdmin):
 
-    list_display = ("entry", "weight")
+    list_display = ("entry", get_challan_no, get_material)
     list_filter = ("weight__material", "weight__challan")
 
 

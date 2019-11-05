@@ -6,6 +6,7 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from django.core.validators import ValidationError
 from django.contrib import messages
+from decimal import Decimal
 
 
 class Party(models.Model):
@@ -96,7 +97,7 @@ class Wallet(models.Model):
     DEDUCT_TYPE_CHOICES = (("FD", "Full Deduct"), ("PD", "Part Deduct"), ("FXD", "Fix Deduct"))
 
     party = models.ForeignKey(Party, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    balance = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal(0.00))
     upper_limit = models.DecimalField(max_digits=9, decimal_places=2, default=20000.00)
 
     deduct_type = models.CharField(max_length=3, choices=DEDUCT_TYPE_CHOICES)
@@ -123,9 +124,10 @@ class Wallet(models.Model):
             return self.balance
 
     def get_part_deduct_amount(self, amount):
-        return 1000.00
+        return Decimal(1000.00)
 
     def get_payable_amount(self, amount):
+        amount = Decimal(amount)
         if self.deduct_type == "FXD":
             payable_amount = min(self.fixed_amount, self.balance, amount)
         elif self.deduct_type == "FD":

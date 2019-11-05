@@ -119,7 +119,7 @@ class WalletTransaction(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     deducted_amount = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal(0.00))
 
-    previous_balance = models.DecimalField(max_digits=8, decimal_places=2)
+    previous_balance = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
 
     def refund_amount(self):
         self.wallet.add_balance(amount=self.amount)
@@ -147,6 +147,14 @@ def refund_to_wallet(sender, instance, *args, **kwargs):
     instance.wallet.add_balance(instance.amount)
 
 
+def assign_previous_balance(sender, created, instance, *args, **kwargs):
+    if created:
+        previous_balance = instance.wallet.balance
+        if instance.previous_balance != previous_balance:
+            instance.previous_balance != previous_balance
+            instance.save()
+
+post_save.connect(assign_previous_balance, sender=WalletTransaction)
 post_save.connect(deduct_from_wallet, sender=WalletTransaction)
 post_save.connect(save_payment, sender=WalletTransaction)
 post_delete.connect(refund_to_wallet, sender=WalletTransaction)

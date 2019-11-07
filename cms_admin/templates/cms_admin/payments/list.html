@@ -25,6 +25,9 @@
                             <th class="th-sm">Party</th>
                             <th class="th-sm">Total Amount</th>
                             <th class="th-sm">Amount Paid</th>
+                            <th>AC Amount</th>
+                            <th>Wallet Amount</th>
+                            <th>Cash Amount</th>
                             <th class="th-sm">Status</th>
                             <th class="th-sm">Actions</th>
                          </thead>
@@ -33,10 +36,13 @@
                                  {% for payment in payments %}
                                      <tr>
                                         <td>{{ forloop.counter }}</td>
-                                         <td><a href="{{ payment.get_absolute_url }}">{{ payment.challan.challan_no }}</a></td>
+                                         <td>{{ payment.challan.challan_no }}</td>
                                         <td>{{ payment.challan.party }}</td>
                                         <td>{{ payment.amount }}</td>
                                         <td>{{ payment.payed_amount }}</td>
+                                        <td>{{ payment.get_ac_tr_amount }}</td>
+                                        <td>{{ payment.get_wallet_tr_amount }}</td>
+                                        <td>{{ payment.get_cash_tr_amount }}</td>
                                         <td>
                                             {% if payment.status == "DN" %}
                                                 <i class="fa fa-check text-success"></i>
@@ -46,7 +52,7 @@
                                             <span style="display: none">{{ payment.status }}</span>
                                         </td>
                                         <td class="m-auto">
-                                            <a class="m-3" href="{{ payment.get_absolute_url }}"><i class="fa fa-eye"></i></a>
+                                            <a class="m-3" href="{{ payment.get_admin_absolute_url }}"><i class="fa fa-eye"></i></a>
                                         </td>
                                      </tr>
                                  {% endfor %}

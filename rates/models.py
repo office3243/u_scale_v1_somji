@@ -59,7 +59,7 @@ class GroupMaterialRate(models.Model):
     def clean(self):
         super().clean()
         if not self.material.check_allowed_rate(self.amount):
-            raise ValidationError("rate must be max {} rs less or more than {}".format(self.material.rate_gap, self.amount))
+            raise ValidationError("Rate must be between {} and {}".format(self.material.down_rate, self.material.up_rate))
 
     class Meta:
         unique_together = ("material", "rate_group")

@@ -67,6 +67,12 @@ class AccountTransaction(models.Model):
     def __str__(self):
         return str(self.amount)
 
+    def get_admin_absolute_url(self):
+        return reverse_lazy("cms_admin:account_transactions_detail", kwargs={"id": self.id})
+
+    def get_admin_update_url(self):
+        return reverse_lazy("cms_admin:account_transactions_update", kwargs={"id": self.id})
+
 
 def generate_ac_tr_payment_code(ac_tr):
     return "{}-{}".format(settings.BRANCH_AC_PAYMENT_PREFIX, ac_tr.id)
@@ -78,10 +84,14 @@ def assign_ac_tr_payment_code(sender, instance, *args, **kwargs):
         instance.payment_code = payment_code
         instance.save()
 
+# def assign_payed_on(sender, instance, *args, **kwargs):
 
 def check_status_ac_tr(sender, instance, *args, **kwargs):
-    if not instance.payment_party and instance.status == "DN":
+    if not (instance.payment_party and instance.payed_on) and instance.status == "DN":
         instance.status = "PN"
+        instance.save()
+    elif (instance.payment_party and instance.payed_on) and instance.status == "PN":
+        instance.status = "DN"
         instance.save()
 
 
@@ -151,8 +161,9 @@ def assign_previous_balance(sender, created, instance, *args, **kwargs):
     if created:
         previous_balance = instance.wallet.balance
         if instance.previous_balance != previous_balance:
-            instance.previous_balance != previous_balance
+            instance.previous_balance = previous_balance
             instance.save()
+
 
 post_save.connect(assign_previous_balance, sender=WalletTransaction)
 post_save.connect(deduct_from_wallet, sender=WalletTransaction)
@@ -190,6 +201,10 @@ class Payment(models.Model):
     @property
     def get_absolute_url(self):
         return reverse_lazy("payments:detail", kwargs={"id": self.id})
+
+    @property
+    def get_admin_absolute_url(self):
+        return reverse_lazy("cms_admin:payments_detail", kwargs={"id": self.id})
 
     @property
     def get_inpayment_amount(self):

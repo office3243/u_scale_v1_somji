@@ -61,8 +61,8 @@ class ReportWeight(models.Model):
         return 0.00
 
 
-def check_status_report_weigth(sender, instance, *args, **kwargs):
-    if (instance.weight_count != 0.00 or not instance.weight.material.has_report) and instance.status == "PN":
+def check_status_report_weight(sender, instance, *args, **kwargs):
+    if (instance.weight_count > 0.00) and instance.status == "PN":
         instance.status = "DN"
         instance.save()
     elif not instance.weight_count and instance.status == "DN":
@@ -71,7 +71,7 @@ def check_status_report_weigth(sender, instance, *args, **kwargs):
 
 
 post_save.connect(save_signal_to_parent, sender=ReportWeight)
-post_save.connect(check_status_report_weigth, sender=ReportWeight)
+post_save.connect(check_status_report_weight, sender=ReportWeight)
 post_delete.connect(save_signal_to_parent, sender=ReportWeight)
 
 
@@ -189,7 +189,7 @@ class Weight(models.Model):
 
     def clean(self):
         if not self.material.check_allowed_rate(self.rate_per_unit):
-            raise ValidationError("Rate maust be {} rs less or more than {}".format(self.material.rate_gap, self.material.default_rate))
+            raise ValidationError("Rate must be between {} and {}".format(self.material.down_rate, self.material.up_rate))
 
 
 def assign_rate_per_unit(sender, instance, *args, **kwargs):
@@ -206,7 +206,6 @@ def assign_total_weight(sender, instance, *args, **kwargs):
 
 
 def assign_amount(sender, instance, *args, **kwargs):
-    print("assign amount")
     amount = instance.calculate_amount
     if instance.amount != amount:
         instance.amount = amount
@@ -279,7 +278,6 @@ class Challan(models.Model):
     def get_high_report_reserve_weights(self):
         report_reserve_weights = []
         for weight in self.weight_set.all():
-            print(weight.get_last_report_percent, "--------------------------------------------")
             if weight.get_last_report_percent > REPORT_PERCENT_LOWER and weight.status == "PN":
                 report_reserve_weights.append(weight)
         return report_reserve_weights
@@ -411,7 +409,6 @@ def challan_no_generator(challan):
 
 
 def assign_challan_no(sender, instance, *args, **kwargs):
-    print(instance.round_amount, instance.extra_charges)
     if not instance.challan_no:
         """temporary for testing"""
         challan_no = challan_no_generator(instance)

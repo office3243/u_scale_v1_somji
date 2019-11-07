@@ -111,7 +111,7 @@
                                     <td class="tempWeight" id="tempWeight_{{ forloop.counter }}">{{ form.instance.total_weight }}</td>
                                     <td>
                                         <div class="col-lg-3">
-                                            <input required style="width: 100px" is_focused="false" min="{{ form.instance.material.get_down_rate }}" max="{{ form.instance.material.get_up_rate }}" onfocus="makeFocused(this);" type="number" step="0.1" value="{{ form.rate_per_unit.initial }}" formset_order="{{ forloop.counter }}" target_id="{{ form.rate_per_unit.auto_id }}" class="tempInput form-control">
+                                            <input required style="width: 100px" is_focused="false" min="{{ form.instance.material.down_rate }}" max="{{ form.instance.material.up_rate }}" onfocus="makeFocused(this);" type="number" step="0.1" value="{{ form.rate_per_unit.initial }}" formset_order="{{ forloop.counter }}" target_id="{{ form.rate_per_unit.auto_id }}" class="tempInput form-control">
                                         </div>
                                     </td>
                                     <td class="tempAmount" id="tempAmount_{{ forloop.counter }}">{{ form.instance.amount }}</td>

@@ -124,7 +124,7 @@ class Wallet(models.Model):
             return self.balance
 
     def get_part_deduct_amount(self, amount):
-        return Decimal(1000.00)
+        return Decimal(0.00)
 
     def get_payable_amount(self, amount):
         amount = Decimal(amount)

@@ -92,22 +92,18 @@ def entries_done(request, challan_no):
 def assign_reports(request, challan_no):
     challan = get_object_or_404(Challan, challan_no=challan_no, is_entries_done=True)
     if request.method == "POST":
-        print(request.POST)
         report_inputs = [report_input for report_input in request.POST if "report_input" in report_input]
-        print(report_inputs)
         for report_input in report_inputs:
             try:
                 weight_id = report_input.split("__")[-1]
                 report_type = request.POST["report_type__" + weight_id]
                 weight = get_object_or_404(Weight, challan=challan, id=weight_id)
-                print(weight, weight.id)
                 weight_count = float(request.POST['report_input__' + weight_id])
                 report_weight = ReportWeight.objects.get_or_create(weight=weight)[0]
                 report_weight.weight_count = weight_count
                 report_weight.report_type = report_type
                 report_weight.reported_on = timezone.now()
                 report_weight.save()
-                print(report_weight.weight_count)
             except Exception as e:
                 print(e)
                 pass
@@ -160,7 +156,6 @@ def weight_entry_create(request):
         material_id = request.POST['material_id']
         """dont allow entry less than 0.1"""
         if entry > 0.1:
-            print(request.POST)
             material = get_object_or_404(Material, id=material_id)
             weight = Weight.objects.get_or_create(challan=challan, material=material)[0]
             weight_entry = WeightEntry.objects.create(weight=weight, entry=entry)

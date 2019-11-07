@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class Material(models.Model):
@@ -11,8 +12,9 @@ class Material(models.Model):
     has_report = models.BooleanField(default=False)
     merge_material = models.ForeignKey("self", related_name="merge_materials", on_delete=models.SET_NULL, blank=True, null=True)
 
-    default_rate = models.FloatField(default=1.0)
-    rate_gap = models.FloatField(default=1.0)
+    up_rate = models.FloatField(default=1.0, validators=[MinValueValidator(limit_value=0.1)])
+    default_rate = models.FloatField(default=1.0, validators=[MinValueValidator(limit_value=0.1)])
+    down_rate = models.FloatField(default=1.0, validators=[MinValueValidator(limit_value=0.1)])
 
     is_active = models.BooleanField(default=True)
 
@@ -28,17 +30,9 @@ class Material(models.Model):
         return reverse_lazy("materials:detail", kwargs={"material_code": self.material_code})
 
     def check_allowed_rate(self, amount):
-        if amount < self.get_down_rate or amount > self.get_up_rate:
+        if amount < self.down_rate or amount > self.up_rate:
             return False
         return True
-
-    @property
-    def get_up_rate(self):
-        return self.default_rate + self.rate_gap
-
-    @property
-    def get_down_rate(self):
-        return max(0.0, (self.default_rate - self.rate_gap))
 
     @property
     def get_merge_material(self):

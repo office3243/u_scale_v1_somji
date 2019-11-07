@@ -2,7 +2,7 @@
 <!--Navbar -->
 <!--Navbar -->
 <nav class="mb-1 navbar navbar-expand-lg navbar-dark success-color">
-  <a class="navbar-brand font-weight-bold" href="#">Executive | U-Scale - Dapodi</a>
+  <a class="navbar-brand font-weight-bold" href="#">EX U-Scale - Dapodi</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent-333"
     aria-controls="navbarSupportedContent-333" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -30,13 +30,16 @@
         <a class="nav-link" href="{% url "rates:rate_group_list" %}">Rate Groups</a>
       </li>
       <li class="nav-item">
+          <a class="nav-link bg-success" href="{% url "cms_admin:wallet_list" %}">Wallets</a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link bg-success" href="{% url "cms_admin:wallet_advances_list" %}">W Advances</a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="{% url "cms_admin:payments_list" %}">Payments</a>
       </li>
       <li class="nav-item">
           <a class="nav-link bg-success" href="{% url "cms_admin:account_transactions_list" %}">AC Transactions</a>
-      </li>
-      <li class="nav-item">
-          <a class="nav-link bg-success" href="{% url "cms_admin:wallet_list" %}">Wallets</a>
       </li>
     </ul>
     <ul class="navbar-nav ml-auto nav-flex-icons">

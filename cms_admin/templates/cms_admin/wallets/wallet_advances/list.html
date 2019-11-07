@@ -13,14 +13,14 @@
     <br><br>
     <div class="container">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header bg-success font-weight-bold white-text">
                 <div class="row">
-                    <div class="col-lg-12 m-auto">
+                    <div class="col-lg-9 m-auto">
                         <h3 class="m-auto"><i class="fa fa-wallet"></i> Wallet Advances List</h3>
                     </div>
-{#                    <div class="col-lg-3">#}
-{#                        <a class="float-right" href="{% url "parties:wallet_list" %}"><button class="btn btn-primary">Create</button></a>#}
-{#                    </div>#}
+                    <div class="col-lg-3">
+                        <a class="float-right" href="{% url "cms_admin:wallet_advances_create" %}"><button class="btn btn-white text-success font-weight-bold">Create</button></a>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -40,7 +40,7 @@
                                         <td>{{ forloop.counter }}</td>
                                          <td>{{ wallet_advance.wallet.party.get_display_text }}</td>
                                         <td>{{ wallet_advance.amount }}</td>
-v                                        <td>{{ wallet_advance.created_on }}</td>
+                                        <td>{{ wallet_advance.created_on }}</td>
                                         <td>{{ wallet_advance.get_gateway_display }}</td>
                                      </tr>
                                  {% endfor %}

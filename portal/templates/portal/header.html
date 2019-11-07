@@ -22,9 +22,6 @@
         <a class="nav-link" href="{% url "parties:list" %}">Parties</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{% url "parties:wallet_list" %}">Wallets</a>
-      </li>
-      <li class="nav-item">
         <a class="nav-link" href="{% url "bank_accounts:list" %}">Bank Accounts</a>
       </li>
       <li class="nav-item">
@@ -33,6 +30,18 @@
       <li class="nav-item">
         <a class="nav-link" href="{% url "rates:rate_group_list" %}">Rate Groups</a>
       </li>
+      <li class="nav-item">
+        {% if user.is_staff or user.is_superuser %}
+            <a class="nav-link bg-success" href="{% url "cms_admin:wallet_list" %}">Wallets</a>
+        {% else %}
+            <a class="nav-link" href="{% url "parties:wallet_list" %}">Wallets</a>
+        {% endif %}
+      </li>
+      {% if user.is_staff or user.is_superuser %}
+          <li class="nav-item">
+              <a class="nav-link bg-success" href="{% url "cms_admin:wallet_advances_list" %}">W Advances</a>
+          </li>
+      {% endif %}
       <li class="nav-item">
         {% if user.is_staff or user.is_superuser %}
             <a class="nav-link bg-success" href="{% url "cms_admin:payments_list" %}">Payments</a>

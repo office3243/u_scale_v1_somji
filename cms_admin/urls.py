@@ -15,4 +15,5 @@ urlpatterns = [
 
     url(r'^wallets/list/$', views.WalletListView.as_view(), name="wallet_list"),
     url(r'^wallets/wallet_advances/list/$', views.WalletAdvanceListView.as_view(), name="wallet_advances_list"),
+    url(r'^wallets/wallet_advances/create/$', views.WalletAdvanceCreateView.as_view(), name="wallet_advances_create"),
 ]

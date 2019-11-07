@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, UpdateView, DeleteView, DetailView, TemplateView
+from django.views.generic import ListView, UpdateView, DeleteView, DetailView, TemplateView, CreateView
 from payments.models import Payment, AccountTransaction, WalletTransaction, CashTransaction
 from django.urls import reverse_lazy
 from parties.models import Wallet, WalletAdvance
@@ -52,7 +52,7 @@ class AccountTransactionUpdateView(LoginRequiredMixin, UpdateView):
     slug_field = "id"
     slug_url_kwarg = "id"
     success_url = reverse_lazy("cms_admin:account_transactions_list")
-    fields = ("payment_party", "payed_on", "status")
+    fields = ("payment_party", "payed_on")
 
 
 class WalletListView(LoginRequiredMixin, ListView):
@@ -68,4 +68,12 @@ class WalletAdvanceListView(LoginRequiredMixin, ListView):
     context_object_name = "wallet_advances"
     template_name = "cms_admin/wallets/wallet_advances/list.html"
     ordering = "-id"
+
+
+class WalletAdvanceCreateView(LoginRequiredMixin, CreateView):
+    model = WalletAdvance
+    template_name = "cms_admin/wallets/wallet_advances/create.html"
+    success_url = reverse_lazy("cms_admin:wallet_advances_list")
+    fields = ("wallet", "amount", "gateway")
+
 

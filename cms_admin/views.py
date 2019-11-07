@@ -13,6 +13,12 @@ class ExecutiveRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_superuser or self.request.user.is_staff
 
 
+class Executive2RequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+
+    def test_func(self):
+        return (self.request.user.is_superuser or self.request.user.is_staff) and self.request.user.username == "executive2"
+
+
 class DashboardView(ExecutiveRequiredMixin, TemplateView):
     template_name = "cms_admin/dashboard.html"
 
@@ -51,7 +57,7 @@ class AccountTransactionDetailView(ExecutiveRequiredMixin, DetailView):
     slug_url_kwarg = "id"
 
 
-class AccountTransactionUpdateView(ExecutiveRequiredMixin, UpdateView):
+class AccountTransactionUpdateView(Executive2RequiredMixin, UpdateView):
 
     model = AccountTransaction
     context_object_name = "account_transaction"
@@ -84,3 +90,10 @@ class WalletAdvanceCreateView(ExecutiveRequiredMixin, CreateView):
     fields = ("wallet", "amount", "gateway")
 
 
+class WalletUpdateView(ExecutiveRequiredMixin, UpdateView):
+    model = Wallet
+    template_name = "cms_admin/wallets/update.html"
+    success_url = reverse_lazy("cms_admin:wallet_list")
+    fields = ("deduct_type", "fixed_amount")
+    slug_url_kwarg = "id"
+    slug_field = "id"

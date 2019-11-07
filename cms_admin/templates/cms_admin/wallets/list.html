@@ -55,7 +55,9 @@
                                         <td>{{ wallet.upper_limit }}</td>
                                         <td class="m-auto">
                                             <a class="m-3" href="{{ wallet.get_absolute_url }}"><i class="fa fa-eye"></i></a>
-{#                                            <a class="m-3" href="{{ wallet.get_update_url }}"><i class="fa fa-pen"></i></a>#}
+                                            {% if user.is_staff or user.is_superuser %}
+                                                <a class="m-3" href="{{ wallet.get_admin_update_url }}"><i class="fa fa-pen"></i></a>
+                                            {% endif %}
                                         </td>
                                      </tr>
                                  {% endfor %}

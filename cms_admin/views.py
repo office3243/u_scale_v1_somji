@@ -4,13 +4,20 @@ from django.views.generic import ListView, UpdateView, DeleteView, DetailView, T
 from payments.models import Payment, AccountTransaction, WalletTransaction, CashTransaction
 from django.urls import reverse_lazy
 from parties.models import Wallet, WalletAdvance
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class ExecutiveRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_staff
+
+
+class DashboardView(ExecutiveRequiredMixin, TemplateView):
     template_name = "cms_admin/dashboard.html"
 
 
-class PaymentListView(LoginRequiredMixin, ListView):
+class PaymentListView(ExecutiveRequiredMixin, ListView):
 
     model = Payment
     template_name = "cms_admin/payments/list.html"
@@ -18,7 +25,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
     ordering = "-id"
 
 
-class PaymentDetailView(LoginRequiredMixin, DetailView):
+class PaymentDetailView(ExecutiveRequiredMixin, DetailView):
 
     template_name = "cms_admin/payments/detail.html"
     model = Payment
@@ -27,7 +34,7 @@ class PaymentDetailView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = "id"
 
 
-class AccountTransactionListView(LoginRequiredMixin, ListView):
+class AccountTransactionListView(ExecutiveRequiredMixin, ListView):
 
     model = AccountTransaction
     template_name = "cms_admin/payments/account_transactions/list.html"
@@ -35,7 +42,7 @@ class AccountTransactionListView(LoginRequiredMixin, ListView):
     ordering = "-id"
 
 
-class AccountTransactionDetailView(LoginRequiredMixin, DetailView):
+class AccountTransactionDetailView(ExecutiveRequiredMixin, DetailView):
 
     model = AccountTransaction
     context_object_name = "account_transaction"
@@ -44,7 +51,7 @@ class AccountTransactionDetailView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = "id"
 
 
-class AccountTransactionUpdateView(LoginRequiredMixin, UpdateView):
+class AccountTransactionUpdateView(ExecutiveRequiredMixin, UpdateView):
 
     model = AccountTransaction
     context_object_name = "account_transaction"
@@ -55,7 +62,7 @@ class AccountTransactionUpdateView(LoginRequiredMixin, UpdateView):
     fields = ("payment_party", "payed_on")
 
 
-class WalletListView(LoginRequiredMixin, ListView):
+class WalletListView(ExecutiveRequiredMixin, ListView):
 
     model = Wallet
     context_object_name = "wallets"
@@ -63,14 +70,14 @@ class WalletListView(LoginRequiredMixin, ListView):
     ordering = "-id"
 
 
-class WalletAdvanceListView(LoginRequiredMixin, ListView):
+class WalletAdvanceListView(ExecutiveRequiredMixin, ListView):
     model = WalletAdvance
     context_object_name = "wallet_advances"
     template_name = "cms_admin/wallets/wallet_advances/list.html"
     ordering = "-id"
 
 
-class WalletAdvanceCreateView(LoginRequiredMixin, CreateView):
+class WalletAdvanceCreateView(ExecutiveRequiredMixin, CreateView):
     model = WalletAdvance
     template_name = "cms_admin/wallets/wallet_advances/create.html"
     success_url = reverse_lazy("cms_admin:wallet_advances_list")

@@ -104,6 +104,7 @@ def add(request, challan_no):
         print(challan.round_amount, challan.extra_charges)
         cash_amount = decimal.Decimal(request.POST.get('cash_amount') or 0)
         account_amount_1 = decimal.Decimal(request.POST.get('account_amount') or 0)
+        actr_no = request.POST.get("actr_no") or None
         ac_less_amount = decimal.Decimal(request.POST.get('ac_less_amount') or 0)
         # total_pay = cash_amount + account_amount_1 + ac_less_amount + payment.payed_amount + round_amount - extra_charges
         total_pay = cash_amount + account_amount_1 + ac_less_amount + payment.payed_amount - extra_charges
@@ -118,7 +119,7 @@ def add(request, challan_no):
             bank_account_id_1 = (request.POST.get('bank_account') or None)
             bank_account_1 = get_object_or_404(BankAccount, id=bank_account_id_1, party=party)
             account_transaction_1 = AccountTransaction.objects.create(payment=payment, amount=account_amount_1,
-                                                                      bank_account=bank_account_1)
+                                                                      bank_account=bank_account_1, actr_no=actr_no)
         if wallet is not None and ac_less_amount:
             wallet_transaction, created = WalletTransaction.objects.get_or_create(payment=payment, wallet=wallet)
             print(created, "--------------------------------------")

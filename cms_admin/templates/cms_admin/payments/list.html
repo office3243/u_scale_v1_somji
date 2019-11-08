@@ -25,6 +25,7 @@
                             <th class="th-sm">Party</th>
                             <th class="th-sm">Total Amount</th>
                             <th class="th-sm">Amount Paid</th>
+                            <th class="th-sm">Remaining Amount</th>
                             <th>AC Amount</th>
                             <th>Wallet Amount</th>
                             <th>Cash Amount</th>
@@ -40,7 +41,8 @@
                                         <td>{{ payment.challan.party }}</td>
                                         <td>{{ payment.amount }}</td>
                                         <td>{{ payment.payed_amount }}</td>
-                                        <td>{{ payment.get_ac_tr_amount }}</td>
+                                        <td>{{ payment.get_remaining_amount }}</td>
+                                        <td>{{ payment.get_ac_tr_amount }} ({% for actr in payment.accounttransaction_set.all %}{{ actr.actr_no }}{% endfor %})</td>
                                         <td>{{ payment.get_wallet_tr_amount }}</td>
                                         <td>{{ payment.get_cash_tr_amount }}</td>
                                         <td>

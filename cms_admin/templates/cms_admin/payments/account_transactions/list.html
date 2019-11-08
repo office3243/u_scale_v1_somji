@@ -23,7 +23,10 @@
                             <th style="width: 30px">NO</th>
                             <th>Challan</th>
                             <th>Party</th>
+                            <th>DPP No</th>
                             <th>Amount</th>
+                            <th>Ch Rm Amount</th>
+                            <th>Ch Total Amount</th>
                             <th>Account</th>
                             <th>Firm</th>
                             <th>Payed On</th>
@@ -37,7 +40,10 @@
                                         <td>{{ forloop.counter }}</td>
                                          <td>{{ account_transaction.payment.challan.challan_no }}</td>
                                         <td>{{ account_transaction.bank_account.party }}</td>
+                                        <td>{{ account_transaction.actr_no }}</td>
                                         <td>{{ account_transaction.amount }}</td>
+                                        <td>{{ account_transaction.payment.get_remaining_amount }}</td>
+                                        <td>{{ account_transaction.payment.amount }}</td>
                                         <td>{{ account_transaction.bank_account.get_display_text }}</td>
                                         <td>{{ account_transaction.payment_party }}</td>
                                         <td>{{ account_transaction.payed_on }}</td>

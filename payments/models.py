@@ -55,6 +55,8 @@ class AccountTransaction(models.Model):
 
     payment_code = models.CharField(max_length=32, blank=True, null=True)
     payment = models.ForeignKey("Payment", on_delete=models.CASCADE)
+    actr_no = models.CharField(verbose_name="Payment No", max_length=7, default="KGP")
+    serial_no = models.CharField(verbose_name="PY Serial No", max_length=7, blank=tuple, null=True)
     bank_account = models.ForeignKey("bank_accounts.BankAccount", on_delete=models.CASCADE, blank=True, null=True)
     payment_party = models.ForeignKey("payment_parties.PaymentParty", on_delete=models.SET_NULL, blank=True, null=True)
     amount = models.DecimalField(max_digits=9, decimal_places=2)

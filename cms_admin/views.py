@@ -65,7 +65,7 @@ class AccountTransactionUpdateView(Executive2RequiredMixin, UpdateView):
     slug_field = "id"
     slug_url_kwarg = "id"
     success_url = reverse_lazy("cms_admin:account_transactions_list")
-    fields = ("payment_party", "payed_on")
+    fields = ("payment_party", "payed_on", "serial_no")
 
 
 class WalletListView(ExecutiveRequiredMixin, ListView):

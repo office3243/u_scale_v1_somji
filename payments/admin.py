@@ -17,7 +17,7 @@ admin.site.register(Payment, PaymentAdmin)
 
 class AccountTransactionAdmin(admin.ModelAdmin):
 
-    list_display = ("amount", "bank_account", "status", "payed_on")
+    list_display = ("amount", "actr_no", "bank_account", "status", "payed_on")
     list_filter = ("payment__challan__party", "status", "payed_on")
 
 
